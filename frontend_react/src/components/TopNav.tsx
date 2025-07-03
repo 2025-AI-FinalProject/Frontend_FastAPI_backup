@@ -27,6 +27,8 @@ const TopNav: React.FC<TopNavProps> = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  const hasUnread = useAppStore((s) => s.hasUnread); // ✅ 추가
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -74,12 +76,13 @@ const TopNav: React.FC<TopNavProps> = () => {
     chart: "Chart",
     preview: "Preview",
     monitoring: "Monitoring",
-    traffic: "트래픽 로그",
+    traffic: "트래픽 모니터링",
     network: "시스템 네트워크 모니터링",
     sql: "SQL 인젝션",
     xss: "크로스사이트 스크립팅",
     summary: "요약 정리",
     realtime: "실시간 모니터링",
+    mypage: "My Page",
   };
 
   const mainCategory = mainCategoryMap[currentPath] || "";
@@ -191,9 +194,15 @@ const TopNav: React.FC<TopNavProps> = () => {
           </AnimatePresence>
         </div>
 
-        <button onClick={toggleNotificationOpen} title="알림 토글">
-          <Bell className="w-5 h-5" />
-        </button>
+        <div className="relative">
+          <button onClick={toggleNotificationOpen} title="알림 토글">
+            <Bell className="w-5 h-5 mt-1" />
+            {/* ✅ 알림 뱃지 */}
+            {hasUnread && (
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-white" />
+            )}
+          </button>
+        </div>
       </div>
     </header>
   );

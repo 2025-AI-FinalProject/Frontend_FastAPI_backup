@@ -18,45 +18,44 @@ interface SectionOpenState {
   attack: boolean;
 }
 
-// 전체 Zustand 상태 타입 (favorites와 toggleFavorite 제거)
+// 전체 Zustand 상태 타입
 interface AppState {
   isLoggedIn: boolean;
   user: User | null;
-  // favorites: string[]; // 이 줄을 제거합니다.
   isSidebarCollapsed: boolean;
   hasHydrated: boolean;
   openSections: SectionOpenState;
   isNotificationOpen: boolean;
 
-  // 액션들 (toggleFavorite 제거)
+  // 알림 관련 상태
+  hasUnread: boolean;
+  unreadCount: number;
+
+  // 액션
   login: (user: User) => void;
   logout: () => void;
   updateUser: (user: User) => void;
-  // toggleFavorite: (path: string) => void; // 이 줄을 제거합니다.
   toggleSidebarCollapsed: () => void;
   setHasHydrated: (v: boolean) => void;
   toggleSectionOpen: (key: keyof SectionOpenState) => void;
   toggleNotificationOpen: () => void;
+
+  // 알림 관련 액션
+  setUnreadCount: (count: number) => void;
+  markAllAsRead: () => void;
 }
 
 // 동적으로 스토리지 타입을 결정하는 함수
 const getDynamicStorage = (): StateStorage => {
   const keepLoggedIn = localStorage.getItem("keepLoggedIn");
-
-  if (keepLoggedIn === "true") {
-    return localStorage;
-  } else {
-    return sessionStorage;
-  }
+  return keepLoggedIn === "true" ? localStorage : sessionStorage;
 };
 
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
-      // 초기 상태
       isLoggedIn: false,
       user: null,
-      // favorites: [], // 이 줄을 제거합니다.
       isSidebarCollapsed: false,
       hasHydrated: false,
 
@@ -66,7 +65,11 @@ export const useAppStore = create<AppState>()(
         monitoring: true,
         attack: true,
       },
-      isNotificationOpen: false,
+      isNotificationOpen: true,
+
+      // 🔔 알림 상태 초기화
+      hasUnread: true,
+      unreadCount: 3, // 초기 더미 값
 
       // 액션 구현
       setHasHydrated: (v: boolean) => set({ hasHydrated: v }),
@@ -80,7 +83,7 @@ export const useAppStore = create<AppState>()(
       },
 
       logout: () => {
-        set((state) => ({
+        set(() => ({
           isLoggedIn: false,
           user: null,
           isSidebarCollapsed: false,
@@ -90,19 +93,18 @@ export const useAppStore = create<AppState>()(
             monitoring: true,
             attack: true,
           },
-          isNotificationOpen: false,
+          isNotificationOpen: true,
+          hasUnread: false,
+          unreadCount: 0,
         }));
-        localStorage.removeItem("keepLoggedIn"); // 'keepLoggedIn' 설정도 초기화
+        localStorage.removeItem("keepLoggedIn");
         toast.success("로그아웃되었습니다.");
       },
 
-      updateUser: (updatedUser: User) => {
+      updateUser: (updatedUser: User) =>
         set((state) => ({
-          user: { ...state.user, ...updatedUser }
-        }));
-      },
-
-      // toggleFavorite: (path: string) => { /* 이 함수 전체를 제거합니다 */ },
+          user: { ...state.user, ...updatedUser },
+        })),
 
       toggleSidebarCollapsed: () =>
         set((state) => ({
@@ -121,9 +123,23 @@ export const useAppStore = create<AppState>()(
         set((state) => ({
           isNotificationOpen: !state.isNotificationOpen,
         })),
+
+      // ✅ 알림 수 설정
+      setUnreadCount: (count: number) =>
+        set(() => ({
+          unreadCount: count,
+          hasUnread: count > 0,
+        })),
+
+      // ✅ 전체 읽음 처리
+      markAllAsRead: () =>
+        set(() => ({
+          unreadCount: 0,
+          hasUnread: false,
+        })),
     }),
     {
-      name: "app-storage", // 스토리지에 저장될 때 사용될 키 이름
+      name: "app-storage",
       storage: createJSONStorage(getDynamicStorage),
       onRehydrateStorage: () => (state) => {
         if (state) {

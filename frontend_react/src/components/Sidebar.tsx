@@ -20,7 +20,7 @@ const labelMap: Record<string, string> = {
     chart: "Chart",
     sql: "SQL 인젝션",
     xss: "크로스사이트 스크립팅",
-    traffic: "트래픽 로그",
+    traffic: "트래픽 모니터링",
     network: "시스템 네트워크 모니터링",
     mypage: "My Page"
     // 필요 시 추가 가능
@@ -90,7 +90,7 @@ const Sidebar: React.FC = () => {
         >
             <div className="h-16 flex items-center justify-center font-bold text-lg shadow-sm">
                 <NavLink to="/" className="truncate">
-                    {isCollapsed ? "B" : "ByeWind"}
+                    {isCollapsed ? "A" : "A_P"}
                 </NavLink>
             </div>
 
@@ -231,7 +231,7 @@ const Sidebar: React.FC = () => {
                             <li className={subItemClass()}>
                                 <NavLink
                                     to="/traffic"
-                                    title="트래픽 로그"
+                                    title="트래픽 모니터링"
                                     className={({ isActive }) =>
                                         `text-gray-700 block px-2 py-1 rounded transition ${
                                             isActive
@@ -240,7 +240,7 @@ const Sidebar: React.FC = () => {
                                         }`
                                     }
                                 >
-                                    {isCollapsed ? "트" : "트래픽 로그"}
+                                    {isCollapsed ? "트" : "트래픽 모니터링"}
                                 </NavLink>
                             </li>
                             <li className={subItemClass()}>
@@ -339,7 +339,7 @@ const Sidebar: React.FC = () => {
 
             {/* 접힌 상태가 아니면 하단 저작권 문구 표시 */}
             {!isCollapsed && (
-                <div className="p-4 text-xs text-gray-500">© 2025 ByeWind</div>
+                <div className="p-4 text-xs text-gray-500">© 2025 A_P</div>
             )}
         </aside>
     );

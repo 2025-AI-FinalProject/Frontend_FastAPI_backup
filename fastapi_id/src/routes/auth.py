@@ -221,3 +221,27 @@ async def change_password(
         )
 
     return UserResponse.model_validate(updated_user)
+
+
+# ----------------------------------------------------
+# 9. 비밀번호 확인 엔드포인트 (POST /auth/verify-password)
+# ----------------------------------------------------
+@router.post("/verify-password", status_code=status.HTTP_200_OK)
+async def verify_user_password(
+    payload: dict,
+    current_user: Annotated[User, Depends(get_current_user)]
+):
+    password = payload.get("password")
+    if not password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="비밀번호가 누락되었습니다."
+        )
+
+    if not verify_password(password, current_user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="비밀번호가 일치하지 않습니다."
+        )
+
+    return {"message": "비밀번호 확인 성공"}

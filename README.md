@@ -7,6 +7,7 @@
 - npm install react-router-dom react-hot-toast
 - npm install tailwindcss @tailwindcss/vite
 - npm install vite-plugin-pwa --save-dev
+- npm install recharts
 - npm install recharts framer-motion
 - npm install clsx
 - npm install lucide-react
