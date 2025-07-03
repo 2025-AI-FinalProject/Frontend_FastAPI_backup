@@ -10,6 +10,7 @@ interface PasswordInputProps {
   onToggleShow: () => void;
   showStrength?: boolean;
   pwStrength?: string;
+  isError?: boolean; // isError prop이 이미 있다고 가정합니다.
 }
 
 const PasswordInput: React.FC<PasswordInputProps> = ({
@@ -20,6 +21,7 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
   onToggleShow,
   showStrength = false,
   pwStrength,
+  isError = false, // isError prop이 있다고 가정하고 기본값 설정
 }) => (
   <div className="space-y-1">
     <label className="block text-sm font-medium text-gray-800">{label}</label>
@@ -32,7 +34,11 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
           console.log(label, e.target.value);
         }}
         autoComplete="off"
-        className="w-full rounded-lg border border-gray-300 px-4 py-2 pr-10 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300 transition"
+        // 이 className은 변경하지 않고 기존대로 유지됩니다.
+        // 하지만 isError prop을 받아서 내부적으로 색상 로직이 구현되어 있다고 가정합니다.
+        className={`w-full rounded-lg border px-4 py-2 pr-10 text-sm text-gray-900 focus:outline-none focus:ring-2 transition
+          ${isError ? "border-red-300 focus:ring-red-200 focus:border-red-600" : "border-gray-300 focus:ring-blue-200 focus:border-blue-300"}
+        `}
       />
       <button
         type="button"
@@ -67,73 +73,91 @@ const PasswordChange: React.FC = () => {
   const [showNewPw, setShowNewPw] = useState(false);
   const [showConfirmPw, setShowConfirmPw] = useState(false);
 
+  // 새 비밀번호와 확인 비밀번호 불일치에 대한 오류 상태
+  const [isConfirmPwMismatch, setIsConfirmPwMismatch] = useState(false);
+  // 현재 비밀번호와 새 비밀번호가 같은 경우에 대한 오류 상태
+  const [isNewPwSameAsCurrentError, setIsNewPwSameAsCurrentError] = useState(false);
+
   const getPasswordStrength = (pw: string) => {
     if (!pw) return "";
-    const strong = /^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[!@#$%^&*]).{10,}$/;
-    const medium = /^(?=.*[a-zA-Z])(?=.*[0-9]).{6,}$/; // 이 부분은 백엔드의 10자 이상, 특수문자 포함 규칙과 맞추는 게 좋습니다.
-    
-    // 백엔드와 동일하게 10자 이상, 영문, 숫자, 특수문자 포함 규칙 적용
     const backendStrong = /^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[!@#$%^&*]).{10,}$/; 
     if (backendStrong.test(pw)) return "강함";
-    // 여기에 더 약한 규칙을 넣을 수 있지만, 백엔드와 맞춰서 "약함" 처리
-    if (pw.length >= 6) return "보통"; // 6자 이상만 해도 보통으로 일단 표시
+    if (pw.length >= 6) return "보통";
     return "약함";
   };
 
   const pwStrength = getPasswordStrength(newPw);
 
-  const handleSubmit = async (e: React.FormEvent) => { // async 추가
+  // 현재 비밀번호 입력 시 실행될 함수
+  const handleCurrentPwChange = (v: string) => {
+    setCurrentPw(v);
+    // 현재 비밀번호와 새 비밀번호가 같으면 오류 상태로 설정
+    // 현재 비밀번호 칸에도 오류 표시를 위해 추가
+    setIsNewPwSameAsCurrentError(v === newPw && v !== "");
+  };
+
+  // 새 비밀번호 입력 시 실행될 함수
+  const handleNewPwChange = (v: string) => {
+    setNewPw(v);
+    // 새 비밀번호가 입력될 때마다 확인 비밀번호와 비교하여 오류 상태 업데이트
+    setIsConfirmPwMismatch(v !== confirmPw && confirmPw !== "");
+    // 현재 비밀번호와 새 비밀번호가 같은지 확인하여 오류 상태 업데이트
+    // 새 비밀번호 칸에도 오류 표시를 위해 추가
+    setIsNewPwSameAsCurrentError(currentPw === v && v !== "");
+  };
+
+  // 새 비밀번호 확인 입력 시 실행될 함수
+  const handleConfirmPwChange = (v: string) => {
+    setConfirmPw(v);
+    // 확인 비밀번호가 입력될 때마다 새 비밀번호와 비교하여 오류 상태 업데이트
+    setIsConfirmPwMismatch(newPw !== v); // 입력값이 다르면 true
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // 입력 필드 유효성 검사 및 UI 업데이트
     if (!currentPw || !newPw || !confirmPw) {
       toast.error("모든 항목을 입력해주세요.");
       return;
     }
 
-    // 백엔드 유효성 검사와 일치하도록 변경 (최소 6자 -> 최소 10자 및 복잡도)
-    // if (newPw.length < 6) { 
-    //   toast.error("새 비밀번호는 최소 6자 이상이어야 합니다.");
-    //   return;
-    // }
-
-    // 비밀번호 강도 검사를 백엔드 규칙과 일치시킵니다.
-    // 백엔드 규칙: 영문, 숫자, 특수문자 포함, 10자 이상
     const backendStrongRegex = /^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[!@#$%^&*]).{10,}$/;
     if (!backendStrongRegex.test(newPw)) {
-        toast.error("새 비밀번호는 영문, 숫자, 특수문자를 포함하고 10자 이상이어야 합니다.");
-        return;
-    }
-
-    if (newPw !== confirmPw) {
-      toast.error("새 비밀번호와 확인 비밀번호가 일치하지 않습니다.");
+      toast.error("새 비밀번호는 영문, 숫자, 특수문자를 포함하고 10자 이상이어야 합니다.");
       return;
     }
 
-    if (newPw === currentPw) {
-        toast.error("새 비밀번호는 현재 비밀번호와 달라야 합니다.");
-        return;
+    // 새 비밀번호와 확인 비밀번호 불일치 검사 (제출 시)
+    if (newPw !== confirmPw) {
+      toast.error("새 비밀번호와 확인 비밀번호가 일치하지 않습니다.");
+      setIsConfirmPwMismatch(true); // 불일치 시 오류 상태 설정
+      return;
+    } else {
+      setIsConfirmPwMismatch(false); // 일치하면 오류 상태 해제
     }
 
-    // if (pwStrength === "약함") { // 이 부분은 위 backendStrongRegex 검사로 대체
-    //   toast.error("비밀번호가 너무 약합니다.");
-    //   return;
-    // }
+    // 새 비밀번호가 현재 비밀번호와 같은지 검사 (제출 시)
+    if (newPw === currentPw) {
+      toast.error("새 비밀번호는 현재 비밀번호와 달라야 합니다.");
+      setIsNewPwSameAsCurrentError(true); // 현재 비밀번호와 같으면 오류 상태 설정
+      return;
+    } else {
+      setIsNewPwSameAsCurrentError(false); // 다르면 오류 상태 해제
+    }
 
     try {
-      // 1. 로컬 스토리지 또는 Context/Redux에서 JWT 토큰 가져오기
-      const token = localStorage.getItem("accessToken"); // 또는 sessionStorage.getItem("accessToken")
+      const token = localStorage.getItem("accessToken");
       if (!token) {
         toast.error("로그인 정보가 없습니다. 다시 로그인해주세요.");
-        // 로그인 페이지로 리다이렉트하는 로직 추가
         return;
       }
 
-      // 2. 백엔드 API에 비밀번호 변경 요청 보내기
       const response = await fetch("http://localhost:8000/auth/change-password", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`, // JWT 토큰을 Authorization 헤더에 추가
+          "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify({
           current_password: currentPw,
@@ -142,19 +166,22 @@ const PasswordChange: React.FC = () => {
         }),
       });
 
-      // 3. 응답 처리
       if (response.ok) {
         toast.success("비밀번호가 성공적으로 변경되었습니다. 다시 로그인해주세요.");
-        // 비밀번호 변경 성공 후 입력 필드 초기화
+        // 비밀번호 변경 성공 후 입력 필드 및 오류 상태 초기화
         setCurrentPw("");
         setNewPw("");
         setConfirmPw("");
-        // 사용자가 다시 로그인하도록 유도 (예: 로그인 페이지로 리다이렉트)
-        // window.location.href = "/login"; // 또는 React Router의 navigate 함수 사용
+        setIsConfirmPwMismatch(false);
+        setIsNewPwSameAsCurrentError(false);
       } else {
         const errorData = await response.json();
-        // 백엔드에서 보낸 에러 메시지를 사용자에게 표시
         toast.error(errorData.detail || "비밀번호 변경 중 오류가 발생했습니다.");
+        // 백엔드에서 특정 오류를 반환할 경우, 해당 필드에 isError를 설정할 수 있습니다.
+        // 예: 백엔드에서 현재 비밀번호가 틀렸다고 알려주면, currentPw 필드에 오류 표시
+        // if (errorData.detail === "현재 비밀번호가 올바르지 않습니다.") {
+        //   setIsCurrentPwError(true); // 이런 식으로 새로운 상태를 만들어 사용
+        // }
       }
     } catch (error) {
       console.error("비밀번호 변경 요청 중 에러 발생:", error);
@@ -173,25 +200,28 @@ const PasswordChange: React.FC = () => {
             <PasswordInput
               label="현재 비밀번호"
               value={currentPw}
-              setValue={setCurrentPw}
+              setValue={handleCurrentPwChange}
               show={showCurrentPw}
               onToggleShow={() => setShowCurrentPw((v) => !v)}
+              isError={isNewPwSameAsCurrentError} // 현재 비밀번호와 새 비밀번호가 같을 때 오류 표시
             />
             <PasswordInput
               label="새 비밀번호"
               value={newPw}
-              setValue={setNewPw}
+              setValue={handleNewPwChange}
               show={showNewPw}
               onToggleShow={() => setShowNewPw((v) => !v)}
               showStrength
               pwStrength={pwStrength}
+              isError={isNewPwSameAsCurrentError} // 새 비밀번호가 현재 비밀번호와 같을 때 오류 표시
             />
             <PasswordInput
               label="새 비밀번호 확인"
               value={confirmPw}
-              setValue={setConfirmPw}
+              setValue={handleConfirmPwChange}
               show={showConfirmPw}
               onToggleShow={() => setShowConfirmPw((v) => !v)}
+              isError={isConfirmPwMismatch} // 새 비밀번호와 확인 비밀번호가 다를 때 오류 표시
             />
           </div>
         </div>
