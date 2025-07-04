@@ -18,10 +18,10 @@ import {
 const labelMap: Record<string, string> = {
     preview: "Preview",
     chart: "Chart",
-    sql: "SQL 인젝션",
-    xss: "크로스사이트 스크립팅",
     traffic: "트래픽 모니터링",
     network: "시스템 네트워크 모니터링",
+    typeofNetworkTrafficAttack: "네트워크 트래픽 공격 유형",
+    typeofSystemLogAttack: "시스템 로그 공격 유형",
     mypage: "My Page"
     // 필요 시 추가 가능
 };
@@ -231,7 +231,7 @@ const Sidebar: React.FC = () => {
                             <li className={subItemClass()}>
                                 <NavLink
                                     to="/traffic"
-                                    title="트래픽 모니터링"
+                                    title="네트워크 트래픽 모니터링"
                                     className={({ isActive }) =>
                                         `text-gray-700 block px-2 py-1 rounded transition ${
                                             isActive
@@ -240,13 +240,13 @@ const Sidebar: React.FC = () => {
                                         }`
                                     }
                                 >
-                                    {isCollapsed ? "트" : "트래픽 모니터링"}
+                                    {isCollapsed ? "트" : "네트워크 트래픽 모니터링"}
                                 </NavLink>
                             </li>
                             <li className={subItemClass()}>
                                 <NavLink
                                     to="/network"
-                                    title="시스템 네트워크 모니터링"
+                                    title="시스템 로그 모니터링"
                                     className={({ isActive }) =>
                                         `text-gray-700 block px-2 py-1 rounded transition ${
                                             isActive
@@ -255,7 +255,7 @@ const Sidebar: React.FC = () => {
                                         }`
                                     }
                                 >
-                                    {isCollapsed ? "시" : "시스템 네트워크 모니터링"}
+                                    {isCollapsed ? "시" : "시스템 로그 모니터링"}
                                 </NavLink>
                             </li>
                         </>
@@ -283,8 +283,8 @@ const Sidebar: React.FC = () => {
                         <>
                             <li className={subItemClass()}>
                                 <NavLink
-                                    to="/sql"
-                                    title="SQL 인젝션"
+                                    to="/typeofNetworkTrafficAttack"
+                                    title="네트워크 트래픽 공격 유형"
                                     className={({ isActive }) =>
                                         `text-gray-700 block px-2 py-1 rounded transition ${
                                             isActive
@@ -293,13 +293,13 @@ const Sidebar: React.FC = () => {
                                         }`
                                     }
                                 >
-                                    {isCollapsed ? "S" : "SQL 인젝션"}
+                                    {isCollapsed ? "트" : "네트워크 트래픽 공격 유형"}
                                 </NavLink>
                             </li>
                             <li className={subItemClass()}>
                                 <NavLink
-                                    to="/xss"
-                                    title="크로스사이트 스크립팅"
+                                    to="/typeofSystemLogAttack"
+                                    title="시스템 로그 공격 유형"
                                     className={({ isActive }) =>
                                         `text-gray-700 block px-2 py-1 rounded transition ${
                                             isActive
@@ -308,7 +308,7 @@ const Sidebar: React.FC = () => {
                                         }`
                                     }
                                 >
-                                    {isCollapsed ? "크" : "크로스사이트 스크립팅"}
+                                    {isCollapsed ? "시" : "시스템 로그 공격 유형"}
                                 </NavLink>
                             </li>
                         </>

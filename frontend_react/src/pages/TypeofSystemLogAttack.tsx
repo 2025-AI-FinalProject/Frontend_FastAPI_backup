@@ -1,6 +1,6 @@
 import React from "react";
 
-const CrossSiteScripting: React.FC = () => {
+const TypeofSystemLogAttack: React.FC = () => {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-semibold mb-2">크로스사이트 스크립팅</h1>
@@ -9,4 +9,4 @@ const CrossSiteScripting: React.FC = () => {
   );
 };
 
-export default CrossSiteScripting;
+export default TypeofSystemLogAttack;

@@ -7,10 +7,10 @@ import LoginPage from "./pages/LoginPage";
 import Mainpage from "./pages/Mainpage";
 import AttackStats from "./pages/AttackStats";
 import AttackChart from "./pages/AttackChart";
-import TrafficMonitoring from "./pages/TrafficMonitoring";
+import NetworkTrafficMonitoring from "./pages/NetworkTrafficMonitoring";
 import SystemNetworkMonitoring from "./pages/SystemNetworkMonitoring";
-import SQLInjection from "./pages/SQLInjection";
-import CrossSiteScripting from "./pages/CrossSiteScripting";
+import TypeofNetworkTrafficAttack from "./pages/TypeofNetworkTrafficAttack";
+import TypeofSystemLogAttack from "./pages/TypeofSystemLogAttack";
 import MyPage from "./pages/MyPage";
 import SignUpPage from "./pages/SignUpPage";
 
@@ -38,10 +38,10 @@ const App = () => (
         {/* 여기서부터 <Outlet /> 내부에 렌더링됨 */}
         <Route path="preview" element={<AttackStats />} />
         <Route path="chart" element={<AttackChart />} />
-        <Route path="traffic" element={<TrafficMonitoring />} />
+        <Route path="traffic" element={<NetworkTrafficMonitoring />} />
         <Route path="network" element={<SystemNetworkMonitoring />} />
-        <Route path="sql" element={<SQLInjection />} />
-        <Route path="xss" element={<CrossSiteScripting />} />
+        <Route path="typeofNetworkTrafficAttack" element={<TypeofNetworkTrafficAttack />} />
+        <Route path="typeofSystemLogAttack" element={<TypeofSystemLogAttack />} />
 
         {/* 마이 페이지 */}
         <Route path="mypage" element={<MyPage />} />

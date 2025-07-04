@@ -66,8 +66,8 @@ const TopNav: React.FC<TopNavProps> = () => {
     chart: "요약 정리",
     traffic: "실시간 모니터링",
     network: "실시간 모니터링",
-    sql: "공격유형별 요약",
-    xss: "공격유형별 요약",
+    typeofNetworkTrafficAttack: "공격유형별 요약",
+    typeofSystemLogAttack: "공격유형별 요약",
   };
 
   const labelMap: Record<string, string> = {
@@ -75,11 +75,12 @@ const TopNav: React.FC<TopNavProps> = () => {
     overview: "Overview",
     chart: "Chart",
     preview: "Preview",
-    monitoring: "Monitoring",
-    traffic: "트래픽 모니터링",
-    network: "시스템 네트워크 모니터링",
-    sql: "SQL 인젝션",
-    xss: "크로스사이트 스크립팅",
+    traffic: "네트워크 트래픽 모니터링",
+    network: "시스템 로그 모니터링",
+
+    typeofNetworkTrafficAttack: "네트워크 트래픽 공격 유형",
+    typeofSystemLogAttack: "시스템 로그 공격 유형",
+
     summary: "요약 정리",
     realtime: "실시간 모니터링",
     mypage: "My Page",
@@ -199,7 +200,7 @@ const TopNav: React.FC<TopNavProps> = () => {
             <Bell className="w-5 h-5 mt-1" />
             {/* ✅ 알림 뱃지 */}
             {hasUnread && (
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-white" />
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-400 rounded-full border border-white" />
             )}
           </button>
         </div>
