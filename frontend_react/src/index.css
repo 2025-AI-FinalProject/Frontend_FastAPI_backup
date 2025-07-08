@@ -10,3 +10,10 @@
   --color-primary : #E3F2FD;
   --color-primary-dull : #B9CDFF;
 }
+
+:focus-visible {
+  outline: none;
+}
+.recharts-wrapper *:focus {
+  outline: none !important;
+}

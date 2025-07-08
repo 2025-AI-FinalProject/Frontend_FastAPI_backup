@@ -50,7 +50,7 @@ const TrafficCard: React.FC<TrafficCardProps> = ({ refreshTrigger, title, unit =
   const lastValue = data[data.length - 1]?.value ?? 0;
 
   return (
-    <div className="border rounded-md bg-white px-4 pt-4 pb-2 shadow text-sm min-h-[260px] w-full flex flex-col justify-between">
+    <div className="bg-gray-50 border border-gray-200 rounded-md shadow-md hover:shadow-lg transition px-4 pt-4 pb-2 text-sm min-h-[260px] w-full flex flex-col justify-between">
       <div className="flex items-start justify-between mb-2">
         <div className="font-semibold">{title}</div>
         <div className="text-sm font-medium text-gray-600">

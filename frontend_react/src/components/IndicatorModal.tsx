@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { X, ArrowRight } from "lucide-react";
-import { toast } from "react-hot-toast"; // ✅ Toaster는 제거하고 toast만 사용
+import { toast } from "react-hot-toast";
 
 interface IndicatorModalProps {
   isOpen: boolean;
@@ -20,20 +20,23 @@ const IndicatorModal: React.FC<IndicatorModalProps> = ({ isOpen, onClose }) => {
   const [selectedIndicators, setSelectedIndicators] = useState<string[]>([]);
   const [selectedIndicator, setSelectedIndicator] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false); // 애니메이션 상태
 
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
-        handleClose();
-      }
-    };
     if (isOpen) {
+      setVisible(true);
       document.addEventListener("mousedown", handleClickOutside);
     }
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isOpen]);
+
+  const handleClickOutside = (e: MouseEvent) => {
+    if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+      handleClose();
+    }
+  };
 
   const handleSelect = (name: string) => {
     if (selectedIndicators.includes(name)) return;
@@ -52,8 +55,9 @@ const IndicatorModal: React.FC<IndicatorModalProps> = ({ isOpen, onClose }) => {
   };
 
   const handleClose = () => {
+    setVisible(false); // 닫기 애니메이션 시작
     setSelectedIndicator(null);
-    onClose();
+    setTimeout(onClose, 200); // 애니메이션 시간 후 실제 닫기
   };
 
   const handleSave = () => {
@@ -67,51 +71,27 @@ const IndicatorModal: React.FC<IndicatorModalProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <>
-      {/* ❌ Toaster 제거됨 */}
-      <div className="fixed inset-0 bg-opacity-80 flex items-center justify-center z-50">
-        <div
-          ref={modalRef}
-          className="bg-white w-[600px] max-w-[90%] rounded-md p-6 shadow-lg"
-        >
-          <h2 className="text-lg font-semibold mb-4">📊 지표 설정 (반드시 4개 선택)</h2>
+    <div
+      className={`fixed inset-0 flex items-center justify-center z-50 transition-opacity duration-200 ${
+        visible ? "opacity-100" : "opacity-0"
+      } bg-black/30`}
+    >
+      <div
+        ref={modalRef}
+        className={`bg-white w-[600px] max-w-[90%] rounded-md p-6 shadow-lg transform transition-all duration-200 ${
+          visible ? "opacity-100 scale-100" : "opacity-0 scale-95"
+        }`}
+      >
+        <h2 className="text-lg font-semibold mb-4">📊 지표 설정 (반드시 4개 선택)</h2>
 
-          <div className="flex space-x-4">
-            {/* 전체 지표 */}
-            <div className="w-1/2 text-sm">
-              <p className="font-medium mb-1">✅ 선택 가능한 전체 지표</p>
-              <ul className="space-y-1 border p-2 h-48 overflow-y-auto rounded">
-                {Object.keys(indicatorDescriptions)
-                  .filter((indicator) => !selectedIndicators.includes(indicator))
-                  .map((indicator) => (
-                    <li
-                      key={indicator}
-                      className="flex justify-between items-center px-2 py-1 hover:bg-gray-100 rounded"
-                    >
-                      <span
-                        className="cursor-pointer"
-                        onClick={() => setSelectedIndicator(indicator)}
-                      >
-                        ▸ {indicator}
-                      </span>
-                      <button
-                        onClick={() => handleSelect(indicator)}
-                        className="text-blue-500 hover:text-blue-700"
-                      >
-                        <ArrowRight className="w-4 h-4" />
-                      </button>
-                    </li>
-                  ))}
-              </ul>
-            </div>
-
-            {/* 선택된 지표 */}
-            <div className="w-1/2 text-sm">
-              <p className="font-medium mb-1">
-                ✅ 내가 선택한 지표 <span className="text-xs text-gray-500">({selectedIndicators.length} / 4)</span>
-              </p>
-              <ul className="space-y-1 border p-2 h-48 overflow-y-auto rounded">
-                {selectedIndicators.map((indicator, idx) => (
+        <div className="flex space-x-4">
+          {/* 전체 지표 */}
+          <div className="w-1/2 text-sm">
+            <p className="font-medium mb-1">✅ 선택 가능한 전체 지표</p>
+            <ul className="space-y-1 border p-2 h-48 overflow-y-auto rounded">
+              {Object.keys(indicatorDescriptions)
+                .filter((indicator) => !selectedIndicators.includes(indicator))
+                .map((indicator) => (
                   <li
                     key={indicator}
                     className="flex justify-between items-center px-2 py-1 hover:bg-gray-100 rounded"
@@ -120,67 +100,97 @@ const IndicatorModal: React.FC<IndicatorModalProps> = ({ isOpen, onClose }) => {
                       className="cursor-pointer"
                       onClick={() => setSelectedIndicator(indicator)}
                     >
-                      {idx + 1}. {indicator}
+                      ▸ {indicator}
                     </span>
                     <button
-                      className="text-red-500 ml-2"
-                      onClick={() => handleRemove(indicator)}
+                      onClick={() => handleSelect(indicator)}
+                      className="text-blue-500 hover:text-blue-700"
                     >
-                      <X className="w-4 h-4" />
+                      <ArrowRight className="w-4 h-4" />
                     </button>
                   </li>
                 ))}
-              </ul>
-            </div>
+            </ul>
           </div>
 
-          {/* 지표 설명 */}
-          <div className="mt-6 pt-4 text-sm text-gray-700 min-h-[90px]">
-            <p className="font-semibold mb-1">📘 지표 상세 설명</p>
-            {selectedIndicator ? (
-              <>
-                <p>
-                  <strong>지표명:</strong> {selectedIndicator}
-                </p>
-                <p>
-                  <strong>설명:</strong>{" "}
-                  {indicatorDescriptions[selectedIndicator]}
-                </p>
-                <p>
-                  <strong>추천 시각화:</strong> 라인 차트
-                </p>
-              </>
-            ) : (
-              <p className="text-gray-500">
-                원하는 지표를 선택하면 간단한 설명이 이곳에 표시됩니다.
-              </p>
-            )}
-          </div>
-
-          <div className="flex justify-between items-center mt-6">
-            <p className="text-xs text-red-500">
-              ※ 지표는 반드시 4개 선택해야 저장할 수 있습니다.
+          {/* 선택된 지표 */}
+          <div className="w-1/2 text-sm">
+            <p className="font-medium mb-1">
+              ✅ 내가 선택한 지표{" "}
+              <span className="text-xs text-gray-500">({selectedIndicators.length} / 4)</span>
             </p>
-            <div className="space-x-2">
-              <button className="px-4 py-1 bg-red-50 hover:bg-red-100 rounded" onClick={handleClose}>
-                취소
-              </button>
-              <button
-                className={`px-4 py-1 rounded text-white ${
-                  selectedIndicators.length === 4
-                    ? "bg-blue-100 hover:bg-blue-200"
-                    : "bg-gray-200"
-                }`}
-                onClick={handleSave}
-                disabled={selectedIndicators.length !== 4}
-              >
-                저장하고 닫기
-              </button>
-            </div>
+            <ul className="space-y-1 border p-2 h-48 overflow-y-auto rounded">
+              {selectedIndicators.map((indicator, idx) => (
+                <li
+                  key={indicator}
+                  className="flex justify-between items-center px-2 py-1 hover:bg-gray-100 rounded"
+                >
+                  <span
+                    className="cursor-pointer"
+                    onClick={() => setSelectedIndicator(indicator)}
+                  >
+                    {idx + 1}. {indicator}
+                  </span>
+                  <button
+                    className="text-red-500 ml-2"
+                    onClick={() => handleRemove(indicator)}
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {/* 지표 설명 */}
+        <div className="mt-6 pt-4 text-sm text-gray-700 min-h-[90px]">
+          <p className="font-semibold mb-1">📘 지표 상세 설명</p>
+          {selectedIndicator ? (
+            <>
+              <p>
+                <strong>지표명:</strong> {selectedIndicator}
+              </p>
+              <p>
+                <strong>설명:</strong> {indicatorDescriptions[selectedIndicator]}
+              </p>
+              <p>
+                <strong>추천 시각화:</strong> 라인 차트
+              </p>
+            </>
+          ) : (
+            <p className="text-gray-500">
+              원하는 지표를 선택하면 간단한 설명이 이곳에 표시됩니다.
+            </p>
+          )}
+        </div>
+
+        <div className="flex justify-between items-center mt-6">
+          <p className="text-xs text-red-500">
+            ※ 지표는 반드시 4개 선택해야 저장할 수 있습니다.
+          </p>
+          <div className="space-x-2">
+            <button
+              className="px-4 py-1 bg-red-50 hover:bg-red-100 rounded"
+              onClick={handleClose}
+            >
+              취소
+            </button>
+            <button
+              className={`px-4 py-1 rounded text-white ${
+                selectedIndicators.length === 4
+                  ? "bg-blue-100 hover:bg-blue-200"
+                  : "bg-gray-200"
+              }`}
+              onClick={handleSave}
+              disabled={selectedIndicators.length !== 4}
+            >
+              저장하고 닫기
+            </button>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

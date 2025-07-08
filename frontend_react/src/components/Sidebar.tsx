@@ -152,61 +152,8 @@ const Sidebar: React.FC = () => {
                                             </button>
                                         )}
                                     </li>
-                                );
-                            })}
-
-                    {/* 요약 정리 섹션 */}
-                    <li
-                        className={categoryLineClass}
-                        onClick={() => toggleSectionOpen("summary")}
-                    >
-                        <FileText size={16} className={isCollapsed ? "" : "mr-2"} />
-                        {!isCollapsed && (
-                            <>
-                                <span className="flex-1">요약 정리</span>
-                                {openSections.summary ? (
-                                    <ChevronDown size={14} />
-                                ) : (
-                                    <ChevronRight size={14} />
-                                )}
-                            </>
-                        )}
-                    </li>
-                    {/* 요약 정리 하위 메뉴 */}
-                    {openSections.summary && (
-                        <>
-                            <li className={subItemClass()}>
-                                <NavLink
-                                    to="/preview"
-                                    title="Preview"
-                                    className={({ isActive }) =>
-                                        `text-gray-700 block px-2 py-1 rounded transition ${
-                                            isActive
-                                                ? "bg-blue-100 text-blue-600 font-medium"
-                                                : "hover:bg-gray-100"
-                                        }`
-                                    }
-                                >
-                                    {isCollapsed ? "P" : "Preview"}
-                                </NavLink>
-                            </li>
-                            <li className={subItemClass()}>
-                                <NavLink
-                                    to="/chart"
-                                    title="Chart"
-                                    className={({ isActive }) =>
-                                        `text-gray-700 block px-2 py-1 rounded transition ${
-                                            isActive
-                                                ? "bg-blue-100 text-blue-600 font-medium"
-                                                : "hover:bg-gray-100"
-                                        }`
-                                    }
-                                >
-                                    {isCollapsed ? "C" : "Chart"}
-                                </NavLink>
-                            </li>
-                        </>
-                    )}
+                            );
+                        })}
 
                     {/* 실시간 모니터링 섹션 */}
                     <li
@@ -269,7 +216,7 @@ const Sidebar: React.FC = () => {
                         <ShieldCheck size={16} className={isCollapsed ? "" : "mr-2"} />
                         {!isCollapsed && (
                             <>
-                                <span className="flex-1">공격유형별 요약</span>
+                                <span className="flex-1">공격 유형별 요약</span>
                                 {openSections.attack ? (
                                     <ChevronDown size={14} />
                                 ) : (
@@ -278,6 +225,7 @@ const Sidebar: React.FC = () => {
                             </>
                         )}
                     </li>
+
                     {/* 공격유형별 요약 하위 메뉴 */}
                     {openSections.attack && (
                         <>
@@ -313,6 +261,60 @@ const Sidebar: React.FC = () => {
                             </li>
                         </>
                     )}
+
+                    {/* 요약 정리 섹션 */}
+                    <li
+                        className={categoryLineClass}
+                        onClick={() => toggleSectionOpen("summary")}
+                    >
+                        <FileText size={16} className={isCollapsed ? "" : "mr-2"} />
+                        {!isCollapsed && (
+                            <>
+                                <span className="flex-1">공격 유형별 대응 정책</span>
+                                {openSections.summary ? (
+                                    <ChevronDown size={14} />
+                                ) : (
+                                    <ChevronRight size={14} />
+                                )}
+                            </>
+                        )}
+                    </li>
+                    {/* 요약 정리 하위 메뉴 */}
+                    {openSections.summary && (
+                        <>
+                            <li className={subItemClass()}>
+                                <NavLink
+                                    to="/preview"
+                                    title="Preview"
+                                    className={({ isActive }) =>
+                                        `text-gray-700 block px-2 py-1 rounded transition ${
+                                            isActive
+                                                ? "bg-blue-100 text-blue-600 font-medium"
+                                                : "hover:bg-gray-100"
+                                        }`
+                                    }
+                                >
+                                    {isCollapsed ? "P" : "Preview"}
+                                </NavLink>
+                            </li>
+                            <li className={subItemClass()}>
+                                <NavLink
+                                    to="/chart"
+                                    title="Chart"
+                                    className={({ isActive }) =>
+                                        `text-gray-700 block px-2 py-1 rounded transition ${
+                                            isActive
+                                                ? "bg-blue-100 text-blue-600 font-medium"
+                                                : "hover:bg-gray-100"
+                                        }`
+                                    }
+                                >
+                                    {isCollapsed ? "C" : "Chart"}
+                                </NavLink>
+                            </li>
+                        </>
+                    )}
+
                 </ul>
             </nav>
 

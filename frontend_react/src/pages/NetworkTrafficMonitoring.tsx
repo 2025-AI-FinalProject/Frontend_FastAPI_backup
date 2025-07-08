@@ -30,7 +30,7 @@ const NetworkTrafficMonitoring: React.FC = () => {
         {/* 컨트롤 버튼 영역 */}
         <div className="flex items-center space-x-2">
           <select
-            className="appearance-none text-sm rounded px-3 py-2 border border-gray-300 bg-white
+            className="appearance-none text-sm rounded px-3 py-2 h-9 border border-gray-300 bg-white
             focus:outline-none focus:ring-1 focus:ring-gray-300 focus:border-gray-300
             cursor-pointer"
           >
@@ -40,7 +40,7 @@ const NetworkTrafficMonitoring: React.FC = () => {
           </select>
 
           <button
-            className={`w-36 text-sm rounded px-3 py-2 transition-colors duration-200 ${
+            className={`w-36 text-sm rounded px-3 py-2 h-9 transition-colors duration-200 ${
               autoRefresh ? "bg-blue-200" : "bg-gray-200"
             }`}
             onClick={() => setAutoRefresh((prev) => !prev)}
@@ -49,7 +49,7 @@ const NetworkTrafficMonitoring: React.FC = () => {
           </button>
 
           <button
-            className="flex items-center text-sm bg-gray-200 hover:bg-gray-300 rounded px-3 py-2"
+            className="flex items-center text-sm bg-gray-200 hover:bg-gray-300 rounded px-3 py-2 h-9"
             onClick={() => setIsModalOpen(true)}
           >
             <Settings className="w-4 h-4 mr-1" /> 지표 설정
