@@ -22,6 +22,9 @@ const labelMap: Record<string, string> = {
     network: "시스템 네트워크 모니터링",
     typeofNetworkTrafficAttack: "네트워크 트래픽 공격 유형",
     typeofSystemLogAttack: "시스템 로그 공격 유형",
+    attackIPBlocking : "외부 공격 IP 차단",
+    isolateInternalInfectedPC : "내부 감염 PC 격리",
+    blockingcertainports : "특정 포트 차단",
     mypage: "My Page"
     // 필요 시 추가 가능
 };
@@ -284,8 +287,8 @@ const Sidebar: React.FC = () => {
                         <>
                             <li className={subItemClass()}>
                                 <NavLink
-                                    to="/preview"
-                                    title="Preview"
+                                    to="/attackIPBlocking"
+                                    title="AttackIPBlocking"
                                     className={({ isActive }) =>
                                         `text-gray-700 block px-2 py-1 rounded transition ${
                                             isActive
@@ -294,13 +297,13 @@ const Sidebar: React.FC = () => {
                                         }`
                                     }
                                 >
-                                    {isCollapsed ? "P" : "Preview"}
+                                    {isCollapsed ? "외" : "외부 공격 IP 차단"}
                                 </NavLink>
                             </li>
                             <li className={subItemClass()}>
                                 <NavLink
-                                    to="/chart"
-                                    title="Chart"
+                                    to="/isolateInternalInfectedPC"
+                                    title="IsolateInternalInfectedPC"
                                     className={({ isActive }) =>
                                         `text-gray-700 block px-2 py-1 rounded transition ${
                                             isActive
@@ -309,7 +312,22 @@ const Sidebar: React.FC = () => {
                                         }`
                                     }
                                 >
-                                    {isCollapsed ? "C" : "Chart"}
+                                    {isCollapsed ? "내" : "내부 감염 PC 관리"}
+                                </NavLink>
+                            </li>
+                            <li className={subItemClass()}>
+                                <NavLink
+                                    to="/blockingcertainports"
+                                    title="Blockingcertainports"
+                                    className={({ isActive }) =>
+                                        `text-gray-700 block px-2 py-1 rounded transition ${
+                                            isActive
+                                                ? "bg-blue-100 text-blue-600 font-medium"
+                                                : "hover:bg-gray-100"
+                                        }`
+                                    }
+                                >
+                                    {isCollapsed ? "특" : "특정 포트 차단"}
                                 </NavLink>
                             </li>
                         </>

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { Bell, Menu, LayoutDashboard, Star, LogOut, User } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion"; // ✅ 추가
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Bell, Menu, Star, LogOut, User, Home } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAppStore } from '../context/useAppStore';
 import { useFavoritesStore } from '../context/useFavoritesStore';
 
@@ -23,11 +23,35 @@ const TopNav: React.FC<TopNavProps> = () => {
   const toggleNotificationOpen = useAppStore((s) => s.toggleNotificationOpen);
   const logoutZustand = useAppStore((s) => s.logout);
   const user = useAppStore((s) => s.user);
+  const hasUnread = useAppStore((s) => s.hasUnread);
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const hasUnread = useAppStore((s) => s.hasUnread); // ✅ 추가
+  const [currentTime, setCurrentTime] = useState("");
+
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, "0");
+      const dd = String(now.getDate()).padStart(2, "0");
+      const hh = String(now.getHours()).padStart(2, "0");
+      const min = String(now.getMinutes()).padStart(2, "0");
+      const ss = String(now.getSeconds()).padStart(2, "0");
+
+      const dayNames = ["일", "월", "화", "수", "목", "금", "토"];
+      const day = dayNames[now.getDay()];
+
+      const formatted = `${yyyy}.${mm}.${dd} (${day}) ${hh}.${min}.${ss}`;
+      setCurrentTime(formatted);
+      console.log("CurrentTime:", formatted); // ✅ 확인용
+    };
+
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -58,31 +82,27 @@ const TopNav: React.FC<TopNavProps> = () => {
 
   const pathParts = location.pathname.split("/").filter(Boolean);
   const currentPath = pathParts[0] ?? "home";
-
   const isFavorite = currentPath ? favorites.includes(currentPath) : false;
 
   const mainCategoryMap: Record<string, string> = {
-    preview: "요약 정리",
-    chart: "요약 정리",
     traffic: "실시간 모니터링",
     network: "실시간 모니터링",
-    typeofNetworkTrafficAttack: "공격유형별 요약",
-    typeofSystemLogAttack: "공격유형별 요약",
+    typeofNetworkTrafficAttack: "공격 유형별 요약",
+    typeofSystemLogAttack: "공격 유형별 요약",
+    attackIPBlocking: "공격 유형별 대응 정책",
+    isolateInternalInfectedPC: "공격 유형별 대응 정책",
+    blockingcertainports: "공격 유형별 대응 정책",
   };
 
   const labelMap: Record<string, string> = {
     home: "Main",
-    overview: "Overview",
-    chart: "Chart",
-    preview: "Preview",
     traffic: "네트워크 트래픽 모니터링",
     network: "시스템 로그 모니터링",
-
     typeofNetworkTrafficAttack: "네트워크 트래픽 공격 유형",
     typeofSystemLogAttack: "시스템 로그 공격 유형",
-
-    summary: "요약 정리",
-    realtime: "실시간 모니터링",
+    attackIPBlocking: "외부 공격 IP 차단",
+    isolateInternalInfectedPC: "내부 감염 PC 관리",
+    blockingcertainports: "특정 포트 차단",
     mypage: "My Page",
   };
 
@@ -92,11 +112,17 @@ const TopNav: React.FC<TopNavProps> = () => {
     (currentPath ? currentPath.charAt(0).toUpperCase() + currentPath.slice(1) : "");
 
   const friendlyParts = mainCategory ? [mainCategory, subCategory] : [subCategory];
-
   const userInitial = user?.name?.charAt(0).toUpperCase() ?? "U";
 
   return (
-    <header className="h-16 bg-white shadow-sm flex items-center justify-between px-4 z-30">
+    <header className="h-16 bg-white shadow-sm flex items-center justify-between px-4 z-30 relative">
+      {/* 중앙 실시간 시간 */}
+      <div className="absolute left-1/2 transform -translate-x-1/2 flex flex-col items-center text-sm text-gray-600 font-medium leading-tight">
+        <span className="text-xs text-gray-500">Today</span>
+        <span className="tracking-wide">{currentTime}</span>
+      </div>
+
+      {/* 왼쪽: 메뉴 & 경로 */}
       <div className="flex items-center gap-2">
         <button
           onClick={toggleSidebarCollapsed}
@@ -106,7 +132,9 @@ const TopNav: React.FC<TopNavProps> = () => {
         </button>
 
         <div className="flex items-center text-sm text-gray-600">
-          <LayoutDashboard className="w-4 h-4 mr-2" />
+          <Link to="/">
+            <Home className="w-4 h-4 mr-2" />
+          </Link>
           {currentPath && (
             <button
               onClick={currentPath !== "home" ? () => toggleFavorite(currentPath) : undefined}
@@ -139,13 +167,8 @@ const TopNav: React.FC<TopNavProps> = () => {
         </div>
       </div>
 
+      {/* 오른쪽: 유저, 알림 */}
       <div className="flex items-center gap-4">
-        <input
-          type="text"
-          placeholder="Search"
-          className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
-        />
-
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setIsDropdownOpen((prev) => !prev)}
@@ -198,7 +221,6 @@ const TopNav: React.FC<TopNavProps> = () => {
         <div className="relative">
           <button onClick={toggleNotificationOpen} title="알림 토글">
             <Bell className="w-5 h-5 mt-1" />
-            {/* ✅ 알림 뱃지 */}
             {hasUnread && (
               <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-400 rounded-full border border-white" />
             )}
