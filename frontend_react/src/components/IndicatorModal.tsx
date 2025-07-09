@@ -171,13 +171,13 @@ const IndicatorModal: React.FC<IndicatorModalProps> = ({ isOpen, onClose }) => {
           </p>
           <div className="space-x-2">
             <button
-              className="px-4 py-1 bg-red-50 hover:bg-red-100 rounded"
+              className="px-4 py-1 text-gray-600 bg-red-50 hover:bg-red-100 rounded"
               onClick={handleClose}
             >
               취소
             </button>
             <button
-              className={`px-4 py-1 rounded text-white ${
+              className={`px-4 py-1 rounded text-gray-600 ${
                 selectedIndicators.length === 4
                   ? "bg-blue-100 hover:bg-blue-200"
                   : "bg-gray-200"

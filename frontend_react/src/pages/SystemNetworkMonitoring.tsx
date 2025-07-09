@@ -6,10 +6,9 @@ import {
   XAxis,
   YAxis,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
   Tooltip,
+  BarChart,
+  Bar,
 } from "recharts";
 import LogFeedModal from "../components/LogFeedModal";
 
@@ -50,7 +49,6 @@ function shadeColor(color: string, percent: number) {
 }
 
 const SystemNetworkMonitoring: React.FC = () => {
-  const [isConnected, setIsConnected] = useState<boolean | null>(null);
   const [selectedThreat, setSelectedThreat] = useState<string | null>(null);
 
   const [logData, setLogData] = useState<{ time: string; value: number }[]>([
@@ -70,7 +68,7 @@ const SystemNetworkMonitoring: React.FC = () => {
 
   const [logFeedData, setLogFeedData] = useState(
     Array.from({ length: 100 }).map((_, i) => ({
-      time: new Date(Date.now() - i * 1000 * 60).toISOString(), // ISO 8601 문자열
+      time: new Date(Date.now() - i * 1000 * 60).toISOString(),
       status: "정상",
       result: "-",
       ip: `192.168.0.${i % 255}`,
@@ -83,14 +81,14 @@ const SystemNetworkMonitoring: React.FC = () => {
   const [activePieIndex, setActivePieIndex] = useState<number | null>(null);
   const [activeLineIndex, setActiveLineIndex] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isConnected, setIsConnected] = useState<boolean | null>(null); // 사용 가능성을 위해 유지
 
   useEffect(() => {
     const interval = setInterval(() => {
-      const now = new Date();
       setLogData((prev) => {
-        let lastTimeStr = prev.length ? prev[prev.length - 1].time : getCurrentTimeLabel(baseTime);
-        let [h, m] = lastTimeStr.split(":").map(Number);
-        let newDate = new Date(baseTime);
+        const lastTimeStr = prev.length ? prev[prev.length - 1].time : getCurrentTimeLabel(baseTime);
+        const [h, m] = lastTimeStr.split(":").map(Number);
+        const newDate = new Date(baseTime);
         newDate.setHours(h);
         newDate.setMinutes(m + 10);
         const newTime = getCurrentTimeLabel(newDate);
@@ -193,7 +191,7 @@ const SystemNetworkMonitoring: React.FC = () => {
       <div className="grid grid-cols-4 gap-4 mb-6">
         {[
           { label: "수집된 로그 수 (24H)", value: "12348 개", valueClass: "text-black text-xl" },
-          { label: "총 탐지된 위협", value: "0", valueClass: "text-green-500 text-2xl" },
+          { label: "총 탐지된 위협", value: "0", valueClass: "text-red-400 text-2xl" },
           { label: "최다 발생 위협 유형", value: "DLL 하이재킹", valueClass: "text-black text-lg" },
           { label: "탐지된 위협 종류", value: "N건 / 없음", valueClass: "text-black text-lg" },
         ].map((card, idx) => (
@@ -224,13 +222,13 @@ const SystemNetworkMonitoring: React.FC = () => {
           }}
         >
           <div className="flex items-center justify-between mb-2 pb-1">
-            <div className="text-blue-600 font-semibold">시간대별 위협 발생 추이</div>
+            <div className="text-gray-600 font-semibold">시간대별 위협 발생 추이</div>
             <div className="text-gray-400 text-xs">최근 1시간 내 위협 발생 추이입니다.</div>
           </div>
           <ResponsiveContainer width="100%" height={230}>
             <LineChart
               data={logData}
-              margin={{ left: -20, right: 25, top: 10, bottom: 5 }}
+              margin={{ left: -20, right: 25, top: 10, bottom: -10 }}
             >
               <XAxis dataKey="time" stroke="#999" />
               <YAxis domain={[1, 10]} ticks={[2, 4, 6, 8, 10]} stroke="#999" />
@@ -249,150 +247,96 @@ const SystemNetworkMonitoring: React.FC = () => {
           className="bg-gray-50 p-4 rounded border border-gray-200 shadow-md hover:shadow-lg hover:border-gray-300 transition focus:outline-none flex flex-col justify-end"
           tabIndex={-1}
         >
-          <div className="text-blue-600 font-semibold mb-2">위협 유형별 분포</div>
+          <div className="text-gray-600 font-semibold mb-2">위협 유형별 분포</div>
           <div className="grid grid-cols-2 gap-4 items-center">
-            <div className="flex items-center justify-center">
-              {pieData.length === 0 ? (
-                <div className="flex items-center justify-center w-full h-[200px] bg-white rounded-full text-sm text-gray-500 border border-dashed border-gray-300">
-                  탐지된 위협이 없습니다.
-                </div>
-              ) : (
-                <ResponsiveContainer width="100%" height={260}>
-                  <PieChart>
-                    <Pie
-                      data={pieData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={70}
-                      activeIndex={activePieIndex ?? undefined}
-                      onMouseEnter={(_, index) => setActivePieIndex(index)}
-                      onMouseLeave={() => setActivePieIndex(null)}
-                      onClick={(data) => {
-                        if (data && data.name) {
-                          setSelectedThreat(data.name);
-                        }
-                      }}
-                      isAnimationActive={true} // 실시간 변화 시 부드러운 애니메이션
-                      labelLine={({ cx, cy, midAngle, outerRadius }) => {
-                        const RADIAN = Math.PI / 180;
-                        const sx = cx + outerRadius * Math.cos(-midAngle * RADIAN);
-                        const sy = cy + outerRadius * Math.sin(-midAngle * RADIAN);
-                        const mx = cx + (outerRadius + 20) * Math.cos(-midAngle * RADIAN);
-                        const my = cy + (outerRadius + 20) * Math.sin(-midAngle * RADIAN);
-                        return (
-                          <polyline
-                            points={`${sx},${sy} ${mx},${my}`}
-                            stroke="#999"
-                            fill="none"
-                            strokeWidth={1}
-                          />
-                        );
-                      }}
-                      label={({ cx, cy, midAngle, outerRadius, index, name }) => {
-                        const RADIAN = Math.PI / 180;
-                        const distance = outerRadius + 33; // 👈 파이 조각에서 충분히 떨어뜨림
-                        const x = cx + distance * Math.cos(-midAngle * RADIAN);
-                        const y = cy + distance * Math.sin(-midAngle * RADIAN);
-
-                        const baseColor = pastelColors[index % pastelColors.length];
-                        const charWidth = 7; // 한 글자당 대략적인 폭(px)
-                        const padding = 10;
-                        const boxWidth = name.length * charWidth + padding * 2;
-
-                        return (
-                          <g>
-                            <rect
-                              x={x - boxWidth / 2}
-                              y={y - 10}
-                              width={boxWidth}
-                              height={20}
-                              fill={shadeColor(baseColor, -40)}
-                              rx={10}
-                              ry={10}
-                              opacity={0.8}
-                            />
-                            <text
-                              x={x}
-                              y={y + 2}
-                              fill="white"
-                              fontWeight="600"
-                              fontSize={11}
-                              textAnchor="middle"
-                              dominantBaseline="middle"
-                              style={{ pointerEvents: "none", userSelect: "none" }}
-                            >
-                              {name}
-                            </text>
-                          </g>
-                        );
-                      }}
-                    >
-                      {pieData.map((_, index) => {
-                        const baseColor = pastelColors[index % pastelColors.length];
-                        const fillColor =
-                          index === activePieIndex ? shadeColor(baseColor, -20) : baseColor;
-                        return <Cell key={`cell-${index}`} fill={fillColor} />;
-                      })}
-                    </Pie>
-                    <Tooltip
-                      formatter={(value: number, name: string) => [
-                        `${value} (${((value / pieTotal) * 100).toFixed(1)}%)`,
-                        name,
-                      ]}
-                      cursor={{ fill: "rgba(0,0,0,0.1)" }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              )}
-            </div>
-
-            <div className="text-sm text-gray-700 min-h-[140px]">
-              {activePieIndex !== null ? (
-                <>
-                  <div className="font-semibold text-blue-600">
-                    {pieData[activePieIndex].name}
-                  </div>
-                  <div>{threatDescriptions[pieData[activePieIndex].name]}</div>
-                  <div className="mt-1 text-xs text-gray-500">
-                    값: {pieData[activePieIndex].value} (
-                    {((pieData[activePieIndex].value / pieTotal) * 100).toFixed(1)}%)
-                  </div>
-                </>
-              ) : selectedThreat ? (
-                <div className="space-y-1">
-                  <div className="font-semibold text-blue-600">{selectedThreat}</div>
-                  <div>{threatDescriptions[selectedThreat]}</div>
-                </div>
-              ) : activeLineIndex !== null ? (
-                <>
-                  <div className="font-semibold text-blue-600">
-                    시간: {logData[activeLineIndex]?.time}
-                  </div>
-                  <div>
-                    값: {logData[activeLineIndex]?.value} (
-                    {logTotal > 0
-                      ? ((logData[activeLineIndex]?.value / logTotal) * 100).toFixed(1)
-                      : 0}
-                    %)
-                  </div>
-                </>
-              ) : (
-                <div className="text-gray-500">
-                  차트 항목을 클릭하거나 마우스를 올리면 간단한 설명이 표시됩니다.
-                </div>
-              )}
-            </div>
+          <div className="flex items-center justify-center">
+            {pieData.length === 0 ? (
+              <div className="flex items-center justify-center w-full h-[200px] bg-white rounded-lg text-sm text-gray-500 border border-dashed border-gray-300">
+                탐지된 위협이 없습니다.
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={60}>
+                <BarChart data={[{ name: "위협", ...pieData.reduce((acc, cur) => {
+                    acc[cur.name] = cur.value;
+                    return acc;
+                  }, {} as Record<string, number>),
+                }]}>
+                  <XAxis hide />
+                  <YAxis hide />
+                  <Tooltip
+                    formatter={(value: number, name: string) => [
+                      `${value} (${((value / pieTotal) * 100).toFixed(1)}%)`,
+                      name,
+                    ]}
+                    cursor={{ fill: "rgba(0,0,0,0.05)" }}
+                  />
+                  {pieData.map((entry, index) => {
+                    const baseColor = pastelColors[index % pastelColors.length];
+                    const fillColor = index === activePieIndex ? shadeColor(baseColor, -20) : baseColor;
+                    return (
+                      <Bar
+                        key={entry.name}
+                        dataKey={entry.name}
+                        stackId="a"
+                        fill={fillColor}
+                        onMouseEnter={() => setActivePieIndex(index)}
+                        onMouseLeave={() => setActivePieIndex(null)}
+                        onClick={() => setSelectedThreat(entry.name)}
+                        isAnimationActive
+                      />
+                    );
+                  })}
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
+
+          <div className="text-sm text-gray-700 min-h-[140px]">
+            {activePieIndex !== null ? (
+              <>
+                <div className="font-semibold text-gray-600">
+                  {pieData[activePieIndex].name}
+                </div>
+                <div>{threatDescriptions[pieData[activePieIndex].name]}</div>
+                <div className="mt-1 text-xs text-gray-500">
+                  값: {pieData[activePieIndex].value} (
+                  {((pieData[activePieIndex].value / pieTotal) * 100).toFixed(1)}%)
+                </div>
+              </>
+            ) : selectedThreat ? (
+              <div className="space-y-1">
+                <div className="font-semibold text-gray-600">{selectedThreat}</div>
+                <div>{threatDescriptions[selectedThreat]}</div>
+              </div>
+            ) : activeLineIndex !== null ? (
+              <>
+                <div className="font-semibold text-gray-600">
+                  시간: {logData[activeLineIndex]?.time}
+                </div>
+                <div>
+                  값: {logData[activeLineIndex]?.value} (
+                  {logTotal > 0
+                    ? ((logData[activeLineIndex]?.value / logTotal) * 100).toFixed(1)
+                    : 0}
+                  %)
+                </div>
+              </>
+            ) : (
+              <div className="text-gray-600">
+                차트 항목을 클릭하거나 마우스를 올리면 간단한 설명이 표시됩니다.
+              </div>
+            )}
+          </div>
+        </div>
+
         </div>
       </div>
 
       <div className="bg-gray-50 p-4 rounded border border-gray-200 shadow-md transition flex flex-col flex-grow overflow-hidden">
         <div className="shrink-0 flex items-center justify-between">
-          <div className="text-blue-600 font-semibold mb-2 pl-1">실시간 로그 피드</div>
+          <div className="text-gray-600 font-semibold mb-2 pl-1">실시간 로그 피드</div>
           <button
-            className="text-xs text-blue-600 underline mb-2 mr-1"
+            className="text-xs text-gray-600 underline mb-2 mr-1"
             type="button"
             onClick={() => setIsModalOpen(true)}
           >
@@ -401,12 +345,12 @@ const SystemNetworkMonitoring: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-6 gap-2 text-sm font-semibold text-gray-700 border-b border-gray-200 pb-2">
-          <div>수집 시각</div>
-          <div>상태</div>
-          <div>위협 결과</div>
-          <div>발생 IP</div>
-          <div>프로세스명</div>
-          <div>호스트명</div>
+          <div className="ml-13">수집 시각</div>
+          <div className="ml-13">상태</div>
+          <div className="ml-3">위협 결과</div>
+          <div className="ml-6">발생 IP</div>
+          <div className="ml-1">프로세스명</div>
+          <div className="ml-1">호스트명</div>
         </div>
 
         <div className="overflow-y-auto flex-grow">
@@ -415,11 +359,11 @@ const SystemNetworkMonitoring: React.FC = () => {
               key={index}
               className={`grid grid-cols-6 gap-2 text-sm border-b border-gray-100 py-1.5 cursor-default
               ${
-                item.status === "위협" ? "text-red-600 font-semibold" : "text-gray-600"
+                item.status === "위협" ? "text-red-400 font-semibold" : "text-gray-600"
               }`}
             >
               <div title={item.time}>{new Date(item.time).toLocaleString()}</div>
-              <div>{item.status}</div>
+              <div className="ml-13">{item.status}</div>
               <div>{item.result}</div>
               <div>{item.ip}</div>
               <div>{item.process}</div>

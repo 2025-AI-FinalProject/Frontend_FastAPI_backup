@@ -43,9 +43,9 @@ const TopNav: React.FC<TopNavProps> = () => {
       const dayNames = ["일", "월", "화", "수", "목", "금", "토"];
       const day = dayNames[now.getDay()];
 
-      const formatted = `${yyyy}.${mm}.${dd} (${day}) ${hh}.${min}.${ss}`;
+      const formatted = `${yyyy}.${mm}.${dd} (${day}) ${hh}:${min}:${ss}`;
       setCurrentTime(formatted);
-      console.log("CurrentTime:", formatted); // ✅ 확인용
+      // console.log("CurrentTime:", formatted); // ✅ 확인용
     };
 
     updateTime();
@@ -128,7 +128,7 @@ const TopNav: React.FC<TopNavProps> = () => {
           onClick={toggleSidebarCollapsed}
           title={isCollapsed ? "사이드바 열기" : "사이드바 접기"}
         >
-          <Menu className="w-5 h-5" />
+          <Menu className="w-5 h-5 text-gray-600" />
         </button>
 
         <div className="flex items-center text-sm text-gray-600">
@@ -144,7 +144,7 @@ const TopNav: React.FC<TopNavProps> = () => {
             >
               <Star
                 className={`w-4 h-4 mr-2 transition ${
-                  isFavorite ? "text-yellow-400 fill-yellow-400" : "text-gray-400"
+                  isFavorite ? "text-yellow-400 fill-yellow-400" : "text-gray-500"
                 }`}
               />
             </button>

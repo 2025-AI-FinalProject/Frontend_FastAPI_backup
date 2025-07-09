@@ -60,8 +60,8 @@ const LogFeedModal: React.FC<LogFeedModalProps> = ({ isOpen, onClose, logFeedDat
           {/* 테이블 헤더 */}
           <div className="grid grid-cols-6 gap-4 px-6 py-3 font-semibold border-b border-gray-200 sticky top-[56px] bg-white z-10 text-sm">
             <div className="ml-10">수집 시각</div>
-            <div>상태</div>
-            <div>위협 결과</div>
+            <div className="ml-13">상태</div>
+            <div className="ml-3">위협 결과</div>
             <div className="ml-6">발생 IP</div>
             <div className="ml-1">프로세스명</div>
             <div className="ml-1">호스트명</div>
@@ -73,11 +73,11 @@ const LogFeedModal: React.FC<LogFeedModalProps> = ({ isOpen, onClose, logFeedDat
               <div
                 key={index}
                 className={`grid grid-cols-6 gap-4 py-2 border-b border-gray-100 cursor-default
-                  ${item.status === "위협" ? "text-red-600 font-semibold" : "text-gray-600"}`}
+                  ${item.status === "위협" ? "text-red-400 font-semibold" : "text-gray-600"}`}
                 title={`${item.time} / ${item.status} / ${item.result} / ${item.ip} / ${item.process} / ${item.host}`}
               >
                 <div>{formatDateTime(item.time)}</div>
-                <div>{item.status}</div>
+                <div className="ml-13">{item.status}</div>
                 <div>{item.result}</div>
                 <div>{item.ip}</div>
                 <div>{item.process}</div>

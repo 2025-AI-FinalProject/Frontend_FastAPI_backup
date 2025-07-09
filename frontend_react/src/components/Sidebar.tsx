@@ -57,7 +57,7 @@ const Sidebar: React.FC = () => {
 
     // 카테고리 라인 공통 클래스: 두껍고 회색, 커서 포인터
     // 접힌 상태면 중앙 정렬 및 구분선 추가
-    const categoryLineClass = `font-semibold mt-4 flex items-center text-gray-500 cursor-pointer ${
+    const categoryLineClass = `font-semibold mt-4 flex items-center text-gray-600 cursor-pointer ${
         isCollapsed ? "justify-center" : ""
     } ${dividerClass}`;
 
@@ -138,7 +138,7 @@ const Sidebar: React.FC = () => {
                                             title={label}
                                             className={`px-2 py-1 rounded transition hover:bg-gray-100 ${
                                                 isCollapsed
-                                                    ? "text-gray-700 block px-2 py-1 rounded transition"
+                                                    ? "text-gray-600 block px-2 py-1 rounded transition"
                                                     : "flex-1 truncate text-left"
                                             }`}
                                         >
@@ -342,14 +342,14 @@ const Sidebar: React.FC = () => {
                     <button
                         onClick={handleLogout} 
                         title="로그아웃"
-                        className="w-full flex items-center justify-center text-red-500 hover:bg-red-50 p-2 rounded transition"
+                        className="w-full flex items-center justify-center text-gray-500 hover:bg-gray-150 p-2 rounded transition"
                     >
                         <LogOut size={16} />
                     </button>
                 ) : (
                     <button
                         onClick={handleLogout} 
-                        className="w-full flex items-center justify-center gap-2 text-sm text-red-500 hover:bg-red-50 p-2 rounded transition"
+                        className="w-full flex items-center justify-center gap-2 text-sm text-gray-500 hover:bg-gray-50 p-2 rounded transition"
                     >
                         <LogOut size={16} />
                         <span>로그아웃</span>

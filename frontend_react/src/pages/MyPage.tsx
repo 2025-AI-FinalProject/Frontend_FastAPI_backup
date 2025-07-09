@@ -98,7 +98,7 @@ const MyPage: React.FC = () => {
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="mt-6 w-full px-4 py-2 rounded-lg transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed bg-blue-100 text-blue-700 hover:bg-blue-200"
+                        className="mt-6 w-full px-4 py-2 rounded-lg transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed bg-blue-100 text-gray-600 hover:bg-blue-200"
                     >
                         {isLoading ? "확인 중..." : "비밀번호 확인"}
                     </button>
@@ -192,13 +192,13 @@ const MyPage: React.FC = () => {
             <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-6 grid grid-cols-1 sm:grid-cols-4 gap-6">
                 {/* 1번 칸: 유저 이미지 + 함께한 날짜 */}
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:justify-start">
-                    <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 text-2xl font-bold shadow-inner">
+                    <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center text-gray-600 text-2xl font-bold shadow-inner">
                         {user.name?.charAt(0) ?? "U"}
                     </div>
                     <div className="text-sm text-gray-700 text-center sm:text-left">
                         <div className="font-semibold text-gray-900">{user.name}님 과</div>
                         <div>
-                            함께한 지 <span className="text-blue-600 font-medium">228일째</span> 입니다
+                            함께한 지 <span className="text-gray-600 font-medium">228일째</span> 입니다
                         </div>
                     </div>
                 </div>
@@ -220,7 +220,7 @@ const MyPage: React.FC = () => {
                 </div>
 
                 {/* 3번 칸: 비밀번호 변경 알림 */}
-                <div className="bg-blue-50 border border-blue-300 rounded-md p-4 text-blue-900 text-xs flex flex-col justify-center">
+                <div className="bg-blue-50 border border-blue-300 rounded-md p-4 text-gray-600 text-xs flex flex-col justify-center">
                     {daysSincePwChange === null ? (
                         <>
                             <div className="font-semibold mb-1">비밀번호 변경 기록 없음</div>
@@ -243,7 +243,7 @@ const MyPage: React.FC = () => {
                 </div>
 
                 {/* 4번 칸: 업무 관련 간단 알림 */}
-                <div className="bg-yellow-50 border border-yellow-300 rounded-md p-4 text-yellow-900 text-xs flex flex-col justify-center">
+                <div className="bg-yellow-50 border border-yellow-300 rounded-md p-4 text-gray-600 text-xs flex flex-col justify-center">
                     <div className="font-semibold mb-1">업무 알림</div>
                     <div>
                         다음 휴가일이 <span className="font-semibold">10일</span> 남았습니다.<br />
@@ -263,7 +263,7 @@ const MyPage: React.FC = () => {
                             <button
                                 className={`flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm transition ${
                                     selectedMenu === "password"
-                                        ? "bg-blue-100 text-blue-700 font-medium"
+                                        ? "bg-blue-100 text-gray-600 font-medium"
                                         : "hover:bg-gray-100 text-gray-700"
                                 }`}
                                 onClick={() => setSelectedMenu("password")}
@@ -275,7 +275,7 @@ const MyPage: React.FC = () => {
                             <button
                                 className={`flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm transition ${
                                     selectedMenu === "emergency"
-                                        ? "bg-blue-100 text-blue-700 font-medium"
+                                        ? "bg-blue-100 text-gray-600 font-medium"
                                         : "hover:bg-gray-100 text-gray-700"
                                 }`}
                                 onClick={() => setSelectedMenu("emergency")}

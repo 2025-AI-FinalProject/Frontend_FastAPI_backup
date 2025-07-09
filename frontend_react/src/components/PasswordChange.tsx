@@ -43,7 +43,7 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
       <button
         type="button"
         onClick={onToggleShow}
-        className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-500 hover:text-blue-600"
+        className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-500"
       >
         {show ? <EyeOff size={18} /> : <Eye size={18} />}
       </button>
@@ -241,7 +241,7 @@ const PasswordChange: React.FC = () => {
             <div className="flex mt-6">
               <button
                 type="submit"
-                className="px-6 py-2 bg-blue-100 text-blue-700 font-semibold rounded-md text-sm hover:bg-blue-200 transition"
+                className="px-6 py-2 bg-blue-100 text-gray-600 font-semibold rounded-md text-sm hover:bg-blue-200 transition"
               >
                 네, 모두 확인했습니다. 비밀번호를 변경합니다.
               </button>
