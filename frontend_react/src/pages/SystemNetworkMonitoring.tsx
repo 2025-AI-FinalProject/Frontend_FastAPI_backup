@@ -244,91 +244,46 @@ const SystemNetworkMonitoring: React.FC = () => {
         </div>
 
         <div
-          className="bg-gray-50 p-4 rounded border border-gray-200 shadow-md hover:shadow-lg hover:border-gray-300 transition focus:outline-none flex flex-col justify-end"
+          className="bg-gray-50 p-4 rounded border border-gray-200 shadow-md hover:shadow-lg hover:border-gray-300 transition focus:outline-none flex flex-col"
           tabIndex={-1}
         >
-          <div className="text-gray-600 font-semibold mb-2">위협 유형별 분포</div>
-          <div className="grid grid-cols-2 gap-4 items-center">
-          <div className="flex items-center justify-center">
-            {pieData.length === 0 ? (
-              <div className="flex items-center justify-center w-full h-[200px] bg-white rounded-lg text-sm text-gray-500 border border-dashed border-gray-300">
-                탐지된 위협이 없습니다.
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={60}>
-                <BarChart data={[{ name: "위협", ...pieData.reduce((acc, cur) => {
-                    acc[cur.name] = cur.value;
-                    return acc;
-                  }, {} as Record<string, number>),
-                }]}>
-                  <XAxis hide />
-                  <YAxis hide />
-                  <Tooltip
-                    formatter={(value: number, name: string) => [
-                      `${value} (${((value / pieTotal) * 100).toFixed(1)}%)`,
-                      name,
-                    ]}
-                    cursor={{ fill: "rgba(0,0,0,0.05)" }}
-                  />
-                  {pieData.map((entry, index) => {
-                    const baseColor = pastelColors[index % pastelColors.length];
-                    const fillColor = index === activePieIndex ? shadeColor(baseColor, -20) : baseColor;
-                    return (
-                      <Bar
-                        key={entry.name}
-                        dataKey={entry.name}
-                        stackId="a"
-                        fill={fillColor}
-                        onMouseEnter={() => setActivePieIndex(index)}
-                        onMouseLeave={() => setActivePieIndex(null)}
-                        onClick={() => setSelectedThreat(entry.name)}
-                        isAnimationActive
-                      />
-                    );
-                  })}
-                </BarChart>
-              </ResponsiveContainer>
-            )}
+          {/* 제목 */}
+          <div className="mt-[1px] text-gray-600 font-semibold leading-tight">
+            위협 유형별 분포
           </div>
 
-          <div className="text-sm text-gray-700 min-h-[140px]">
-            {activePieIndex !== null ? (
-              <>
-                <div className="font-semibold text-gray-600">
-                  {pieData[activePieIndex].name}
-                </div>
-                <div>{threatDescriptions[pieData[activePieIndex].name]}</div>
-                <div className="mt-1 text-xs text-gray-500">
-                  값: {pieData[activePieIndex].value} (
-                  {((pieData[activePieIndex].value / pieTotal) * 100).toFixed(1)}%)
-                </div>
-              </>
-            ) : selectedThreat ? (
-              <div className="space-y-1">
-                <div className="font-semibold text-gray-600">{selectedThreat}</div>
-                <div>{threatDescriptions[selectedThreat]}</div>
-              </div>
-            ) : activeLineIndex !== null ? (
-              <>
-                <div className="font-semibold text-gray-600">
-                  시간: {logData[activeLineIndex]?.time}
-                </div>
+          {/* 수평 100% 스택 바 그래프 */}
+          <div className="h-[30px] w-full flex rounded overflow-hidden mt-7 border border-gray-200">
+            {pieData.map((item, index) => {
+              const percent = (item.value / pieTotal) * 100;
+              return (
+                <div
+                  key={item.name}
+                  style={{
+                    width: `${percent}%`,
+                    backgroundColor: pastelColors[index % pastelColors.length],
+                  }}
+                  title={`${item.name}: ${percent.toFixed(1)}%`}
+                />
+              );
+            })}
+          </div>
+
+          {/* 설명 텍스트 */}
+          <div className="mt-4 h-[180px] text-sm text-gray-700 space-y-2 border border-gray-200 p-2 rounded overflow-y-auto">
+            {pieData.map((item, idx) => (
+              <div key={item.name} className="flex items-start gap-2">
+                <div
+                  className="w-3 h-3 mt-1 rounded-sm shrink-0"
+                  style={{ backgroundColor: pastelColors[idx % pastelColors.length] }}
+                />
                 <div>
-                  값: {logData[activeLineIndex]?.value} (
-                  {logTotal > 0
-                    ? ((logData[activeLineIndex]?.value / logTotal) * 100).toFixed(1)
-                    : 0}
-                  %)
+                  <span className="font-semibold">{item.name}</span>:{" "}
+                  {threatDescriptions[item.name] ?? "설명이 없습니다."}
                 </div>
-              </>
-            ) : (
-              <div className="text-gray-600">
-                차트 항목을 클릭하거나 마우스를 올리면 간단한 설명이 표시됩니다.
               </div>
-            )}
+            ))}
           </div>
-        </div>
-
         </div>
       </div>
 
