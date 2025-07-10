@@ -24,10 +24,10 @@ const pastelColors: string[] = [
   "#FFCCBC",
   "#D9D1D9",
   "#D4EDDA",
-  "#BED7DD",
+  "#ADC3B8",
   "#FFF5CC",
   "#C3B1C5",
-  "#BBDCDC",
+  "#DDD7BD",
   "#FFB3A7",
 ];
 
@@ -104,18 +104,15 @@ const SystemNetworkMonitoring: React.FC = () => {
       });
 
       setPieData((prev) =>
-        prev.map((item, idx) => ({
+        prev.map((item) => ({
           ...item,
-          // pieData 값을 0이 될 수도 있도록 수정 (테스트용: 모든 값이 0이 될 가능성 포함)
-          // 20% 확률로 0, 80% 확률로 1~10 사이 값
           value: Math.random() < 0.2 ? 0 : Math.floor(Math.random() * 10) + 1,
         }))
       );
-    }, 10000);
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [baseTime]);
-
 
   const handleRefresh = () => {
     const now = new Date();
@@ -131,7 +128,6 @@ const SystemNetworkMonitoring: React.FC = () => {
     }
     setLogData(initialLogData);
 
-    // 새로고침 시 pieData 값을 모두 1로 초기화 (테스트를 위해 모든 값이 0이 되는 상황을 리셋)
     setPieData([
       { name: "DCOM공격", value: 1 },
       { name: "DLL 하이재킹", value: 1 },
@@ -187,47 +183,23 @@ const SystemNetworkMonitoring: React.FC = () => {
   const pieTotal = pieData.reduce((acc, item) => acc + item.value, 0);
 
   const calculateRoundedWidths = useMemo(() => (
-    (data: PieDataItem[], totalContainerPixels: number, minPixelWidth: number = 2): number[] => { // minPixelWidth 인자 추가
-      // pieTotal이 0이거나 데이터가 없을 때, 각 아이템에 minPixelWidth를 할당
+    (data: PieDataItem[], totalContainerPixels: number): number[] => {
       if (pieTotal === 0 || data.length === 0) {
-        // totalContainerPixels를 각 아이템에 균등하게 분배 (minPixelWidth 이상이 되도록)
-        const baseWidth = Math.max(minPixelWidth, totalContainerPixels / Math.max(1, data.length));
-        return data.map(() => baseWidth);
+        return data.map(() => 0);
       }
 
       let rawPixels = data.map(item => (item.value / pieTotal) * totalContainerPixels);
       let roundedPixels = rawPixels.map(p => Math.round(p));
 
-      // 0으로 반올림된 값들에 minPixelWidth 적용
-      roundedPixels = roundedPixels.map(p => p === 0 ? minPixelWidth : p);
-
       let currentSum = roundedPixels.reduce((acc, width) => acc + width, 0);
       let difference = totalContainerPixels - currentSum;
-
-      // minPixelWidth 적용 후에도 총합이 달라질 수 있으므로, 재조정 필요
-      // 다만, 여기서는 차이가 크게 나지 않는 한도 내에서 처리 (모든 항목에 minWidth 적용하면 총합이 크게 늘어날 수 있음)
-
-      // 이 부분은 전체 너비를 넘지 않도록 조정하는 로직
-      // minPixelWidth가 적용되어 실제 합계가 totalContainerPixels를 초과할 가능성이 있습니다.
-      // 이를 방지하려면 minPixelWidth 적용 로직을 더 복잡하게 가져가거나,
-      // 단순히 시각적인 최소 너비로만 사용하고 실제 계산은 rawPixels 기반으로 하는 것이 좋습니다.
-      // 여기서는 시각적인 목적을 위해 `finalBarPixelWidths`가 0일 때 `minWidth`를 강제 적용하는 방식으로 가겠습니다.
-      // 따라서 calculateRoundedWidths는 원래대로 0을 반환할 수 있도록 유지합니다.
-      
-      // 원래 로직 유지: 0으로 반올림되는 경우 그대로 0을 반환
-      // minWidth 적용은 렌더링 단계에서 진행 (아래 finalBarPixelWidths 계산 후)
-      rawPixels = data.map(item => (item.value / pieTotal) * totalContainerPixels);
-      roundedPixels = rawPixels.map(p => Math.round(p));
-
-      currentSum = roundedPixels.reduce((acc, width) => acc + width, 0);
-      difference = totalContainerPixels - currentSum;
 
       let sortedIndices = rawPixels
         .map((value, index) => ({ value: value, index: index }))
         .sort((a, b) => b.value - a.value);
 
       if (sortedIndices.length === 0) {
-        return data.map(() => 0); // 데이터가 없으므로 0 반환
+        return data.map(() => 0);
       }
 
       const numAdjustments = Math.abs(difference);
@@ -242,29 +214,27 @@ const SystemNetworkMonitoring: React.FC = () => {
 
       return roundedPixels;
     }
-  ), [pieData, pieTotal]); // pieData와 pieTotal에 의존함을 명시
+  ), [pieData, pieTotal]);
 
   const FIXED_BAR_CHART_WIDTH = 570;
   const rawPixelWidths = calculateRoundedWidths(pieData, FIXED_BAR_CHART_WIDTH);
 
-  // 렌더링 시점에 최소 너비 적용
   const finalBarPixelWidths = useMemo(() => {
+    const MIN_BAR_WIDTH_PX = 2; // 각 바의 최소 너비 픽셀
+
     if (pieTotal === 0 || pieData.length === 0) {
-      // 총합이 0이거나 데이터가 없을 경우, 모든 바에 균등하게 최소 너비 할당
-      const minWidthPerItem = Math.max(2, Math.floor(FIXED_BAR_CHART_WIDTH / Math.max(1, pieData.length)));
+      const minWidthPerItem = Math.max(MIN_BAR_WIDTH_PX, Math.floor(FIXED_BAR_CHART_WIDTH / Math.max(1, pieData.length)));
       const widths = pieData.map(() => minWidthPerItem);
-      // 총 너비를 넘지 않도록 마지막 요소만 조정 (약간의 오차는 감수)
+      
       const currentTotal = widths.reduce((sum, w) => sum + w, 0);
       if (currentTotal > FIXED_BAR_CHART_WIDTH && widths.length > 0) {
-        widths[widths.length - 1] = Math.max(2, widths[widths.length - 1] - (currentTotal - FIXED_BAR_CHART_WIDTH));
+        widths[widths.length - 1] = Math.max(MIN_BAR_WIDTH_PX, widths[widths.length - 1] - (currentTotal - FIXED_BAR_CHART_WIDTH));
       }
       return widths;
     } else {
-      // 데이터가 있을 경우, calculateRoundedWidths 결과 사용 (0px인 경우 minWidth 적용)
-      return rawPixelWidths.map(px => px === 0 ? 2 : px); // 여기서 2px를 최소 너비로 강제 적용
+      return rawPixelWidths.map(px => px === 0 ? MIN_BAR_WIDTH_PX : px);
     }
   }, [rawPixelWidths, pieTotal, pieData.length]);
-
 
   return (
     <div className="p-6 bg-white h-full flex flex-col">
@@ -339,17 +309,17 @@ const SystemNetworkMonitoring: React.FC = () => {
             className="h-[30px] w-[570px] rounded overflow-hidden mt-5 flex"
           >
             {pieData.map((item, index) => {
-              // pieTotal이 0이 아닌 경우에만 개별 값 표시, 0일 경우 minWidth 적용된 값 사용
               const pixelWidth = finalBarPixelWidths[index];
-              const barTitle = pieTotal === 0 ? "데이터 없음" : `${item.name}: ${item.value}`;
+              const barTitle = item.value === 0 ? `${item.name}: 데이터 없음` : `${item.name}: ${item.value}`;
               return (
                 <div
                   key={item.name}
                   style={{
                     width: `${pixelWidth}px`,
-                    // pieTotal이 0일 경우 모든 바를 회색조로 표시하여 데이터 없음 상태 시각화
-                    backgroundColor: pieTotal === 0 ? "#E0E0E0" : pastelColors[index % pastelColors.length],
-                    flexShrink: 0, // flex 아이템이 축소되지 않도록 함
+                    backgroundColor: item.value === 0 ? "#E0E0E0" : pastelColors[index % pastelColors.length],
+                    flexShrink: 0,
+                    // 여기에 transition 속성 추가
+                    transition: 'width 0.5s ease-out, background-color 0.5s ease-out', // 너비와 배경색에 애니메이션 적용
                   }}
                   title={barTitle}
                 />
@@ -357,30 +327,31 @@ const SystemNetworkMonitoring: React.FC = () => {
             })}
           </div>
           <div className="mt-6 h-[180px] text-sm text-gray-700 space-y-2 border border-gray-200 p-3 rounded overflow-y-auto">
-            {pieTotal === 0 ? (
-              <div className="text-center text-gray-500 py-4">
-                탐지된 위협 데이터가 없습니다.
-              </div>
-            ) : (
-              pieData.map((item, idx) => (
-                <div key={item.name} className="flex items-start gap-2">
-                  <div className="w-3 h-3 mt-1 rounded-sm shrink-0" style={{ backgroundColor: pastelColors[idx % pastelColors.length] }} />
-                  <div>
-                    <span className="font-semibold">{item.name}</span>:{" "}
-                    {threatDescriptions[item.name] ?? "설명이 없습니다."}
-                  </div>
+            {pieData.map((item, idx) => (
+              <div key={item.name} className="flex items-start gap-2">
+                <div 
+                  className="w-3 h-3 mt-1 rounded-sm shrink-0" 
+                  style={{ backgroundColor: item.value === 0 ? "#E0E0E0" : pastelColors[idx % pastelColors.length] }} 
+                />
+                <div>
+                  <span className="font-semibold">{item.name}</span>:{" "}
+                  {item.value === 0 ? ( 
+                    <span className="text-gray-500">탐지된 위협 데이터가 없습니다.</span>
+                  ) : (
+                    threatDescriptions[item.name] ?? "설명이 없습니다."
+                  )}
                 </div>
-              ))
-            )}
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      <div className="bg-gray-50 p-4 rounded border border-gray-200 shadow-md transition flex flex-col flex-grow overflow-hidden">
+      <div className="bg-gray-50 min-h-[230px] p-4 rounded border border-gray-200 shadow-md transition flex flex-col flex-grow overflow-hidden">
         <div className="shrink-0 flex items-center justify-between">
           <div className="text-gray-600 font-semibold mb-2 pl-1">실시간 로그 피드</div>
           <button className="text-xs text-gray-600 underline mb-2 mr-1" type="button" onClick={() => setIsModalOpen(true)}>
-            더보기
+            상세보기
           </button>
         </div>
         <div className="grid grid-cols-6 gap-2 text-sm font-semibold text-gray-700 border-b border-gray-200 pb-2">
