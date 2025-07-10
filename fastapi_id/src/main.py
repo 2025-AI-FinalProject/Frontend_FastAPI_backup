@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.exc import IntegrityError
 from .database import Base, engine 
 from .routes import auth 
+from fastapi.staticfiles import StaticFiles # 🚨 추가: StaticFiles 임포트
 
 app = FastAPI(title="FastAPI User Authentication API")
 
@@ -25,6 +26,13 @@ app.add_middleware(
     allow_methods=["*"],  # 모든 HTTP 메서드 허용
     allow_headers=["*"],  # 모든 헤더 허용
 )
+
+# 🚨 추가된 부분: 정적 파일 서비스 설정
+# 'downloads' 디렉토리의 파일을 '/downloads' 경로로 서비스합니다.
+# 이 경로는 클라이언트에서 파일을 요청할 때 사용됩니다.
+# 예: http://localhost:8000/downloads/sample_installer.exe
+app.mount("/downloads", StaticFiles(directory="downloads"), name="downloads")
+
 
 # 데이터베이스 테이블 생성 (애플리케이션 시작 시)
 @app.on_event("startup")
