@@ -359,7 +359,7 @@ const SystemNetworkMonitoring: React.FC = () => {
                     <ResponsiveContainer width="100%" height={230}>
                         <LineChart data={logData} margin={{ left: -20, right: 25, top: 10, bottom: -10 }}>
                             <XAxis dataKey="time" stroke="#999" /> {/* X축 (시간) */}
-                            <YAxis domain={[0, 'auto']} ticks={[0, 2, 4, 6, 8, 10]} stroke="#999" /> {/* Y축 (값), 도메인과 틱 설정 */}
+                            <YAxis domain={[0, 10]} ticks={[2, 4, 6, 8, 10]} stroke="#999" /> {/* Y축 (값), 도메인과 틱 설정 */}
                             <Tooltip /> {/* Tooltip 컴포넌트: 호버 시 데이터 값 표시 */}
                             <Line type="monotone" dataKey="value" stroke="#B9CDFF" strokeWidth={2} dot={false} /> {/* 라인 그래프 */}
                         </LineChart>
