@@ -127,23 +127,15 @@ const NotificationPanel: React.FC = () => {
 
             {/* 메인 콘텐츠 영역 (상단 알림, LLM 요약본, 메시지 채팅) */}
             <div className="flex-1 flex flex-col overflow-hidden">
-                {/* 일반 알림 표시 영역 */}
-                <div className="p-4 flex-shrink-0">
-                    <div className="space-y-2 text-sm">
-                        <div className="p-2 border rounded bg-gray-100">🚨 트래픽 이상 감지 알림</div>
-                        <div className="p-2 border rounded bg-gray-100">🆕 New user registered</div>
-                        <div className="p-2 border rounded bg-gray-100">🐞 Bug detected</div>
-                    </div>
-                </div>
 
                 {/* LLM 요약본 (채팅) 영역 */}
                 <div className="mt-2 flex-1 flex flex-col min-h-0">
                     {/* LLM 요약본 제목과 대화 내역 삭제 버튼 */}
                     <div className="flex items-center justify-between mb-1 px-4">
-                        <h3 className="font-semibold text-sm">LLM 요약본</h3>
+                        <h3 className="mt-2 font-semibold text-sm">LLM 요약본</h3>
                         <button
                             onClick={handleDeleteChatHistoryRequest} // 클릭 시 삭제 확인 UI 표시 요청
-                            className="text-gray-500 hover:text-red-400 p-1 rounded-full focus:outline-none focus:ring-2 focus:ring-red-300 focus:text-red-400"
+                            className="text-gray-500 hover:text-red-400 p-1 rounded-full focus:outline-none focus:ring-2 focus:ring-red-300 focus:"
                             aria-label="대화 내역 삭제"
                         >
                             <Trash2 size={16} /> {/* 휴지통 아이콘 */}
