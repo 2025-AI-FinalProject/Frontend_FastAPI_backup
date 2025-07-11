@@ -304,12 +304,14 @@ const SignUpPage: React.FC = () => {
                                 <input
                                     id="phone"
                                     type="tel"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
                                     autoComplete="tel"
                                     required 
+                                    placeholder="숫자만 입력 (01012345678)" 
                                     className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
                                         errors.phone ? "border-red-500" : "border-gray-300"
                                     } placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-gray-500 focus:border-gray-500 focus:z-10 sm:text-sm`}
-                                    placeholder="숫자만 입력 (01012345678)" 
                                     {...register("phone")}
                                 />
                                 {errors.phone && (
@@ -344,7 +346,7 @@ const SignUpPage: React.FC = () => {
                 <div className="w-full md:w-1/2 flex items-center justify-center p-8">
                     <div className="w-full max-w-sm text-center space-y-4">
                         <h2 className="text-2xl font-semibold text-gray-800">
-                            <span className="text-gray-600">애플리케이션을 설치</span>할 시간입니다!
+                            <span className="text-red-400">애플리케이션을 설치</span>할 시간입니다!
                         </h2>
                         <p className="text-gray-600">
                             회원가입이 완료되면, 보안 네트워크 관리 시스템을 위한 전용 애플리케이션을 다운로드하여 설치해야 합니다.
