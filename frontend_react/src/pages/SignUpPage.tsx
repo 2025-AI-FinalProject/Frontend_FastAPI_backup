@@ -96,9 +96,12 @@ const SignUpPage: React.FC = () => {
     // 🚨 이 함수가 수정되었습니다.
     const handleAuthenticateAndDownload = async (empNumber: string, password: string) => {
         setIsDownloadModalOpen(false); // 모달 닫기
-        const loadingAuthToastId = toast.loading("인증 확인 중..."); // 새로운 로딩 토스트 ID 저장
+
+        // 🚨 1. 인증 확인 로딩 토스트 시작
+        const loadingAuthToastId = toast.loading("인증 확인 중...");
 
         try {
+            // FastAPI 로그인 API 호출 (인증)
             const response = await fetch("http://localhost:8000/auth/login", { 
                 method: "POST",
                 headers: {
@@ -108,11 +111,14 @@ const SignUpPage: React.FC = () => {
             });
 
             if (response.ok) {
-                // 인증 성공 후 로딩 토스트 업데이트 및 새 로딩 토스트 띄우기
+                // 🚨 2. 인증 성공 시 로딩 토스트 업데이트 (성공 메시지로 변경)
                 toast.success("인증 성공! 다운로드를 준비합니다.", { id: loadingAuthToastId });
-                const downloadingToastId = toast.loading("애플리케이션 다운로드 중..."); // 다운로드용 새 토스트 ID
+                
+                // 🚨 3. 다운로드 시작 로딩 토스트 새로 시작 (다운로드 진행을 알림)
+                const downloadingToastId = toast.loading("애플리케이션 다운로드 중...");
 
                 try {
+                    // 파일 다운로드 로직
                     const downloadResponse = await fetch("http://localhost:8000/downloads/hello.exe");
                     if (!downloadResponse.ok) {
                         throw new Error("파일 다운로드에 실패했습니다.");
@@ -127,24 +133,30 @@ const SignUpPage: React.FC = () => {
                     a.remove();
                     window.URL.revokeObjectURL(url);
 
+                    // 🚨 4. 다운로드 성공 시 다운로드 토스트 업데이트
                     toast.success("애플리케이션 다운로드가 시작됩니다!", { id: downloadingToastId });
+
                 } catch (downloadError) {
                     console.error("다운로드 오류:", downloadError);
+                    // 🚨 5. 다운로드 실패 시 다운로드 토스트 업데이트
                     toast.error("파일 다운로드 중 오류가 발생했습니다.", { id: downloadingToastId });
                 }
 
             } else {
+                // 인증 실패 처리
                 const errorData = await response.json();
                 console.error("Client: Login server response error (JSON):", errorData);
                 let errorMessage = "인증에 실패했습니다. 사번 또는 비밀번호를 확인해주세요.";
                 if (errorData.detail) {
                     errorMessage = errorData.detail;
                 }
-                toast.error(errorMessage, { id: loadingAuthToastId }); // 실패 시 로딩 토스트를 에러 토스트로 업데이트
+                // 🚨 6. 인증 실패 시 초기 로딩 토스트를 에러 토스트로 업데이트
+                toast.error(errorMessage, { id: loadingAuthToastId });
             }
         } catch (error) {
             console.error("Client: 로그인 요청 중 오류 발생 (네트워크 등):", error);
-            toast.error("네트워크 오류가 발생했습니다. 서버에 연결할 수 없습니다.", { id: loadingAuthToastId }); // 네트워크 오류 시 로딩 토스트를 에러 토스트로 업데이트
+            // 🚨 7. 네트워크 오류 등 예외 발생 시 초기 로딩 토스트를 에러 토스트로 업데이트
+            toast.error("네트워크 오류가 발생했습니다. 서버에 연결할 수 없습니다.", { id: loadingAuthToastId });
         }
     };
 

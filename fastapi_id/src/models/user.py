@@ -3,11 +3,13 @@
 from sqlalchemy import Column, String, DateTime, Boolean, func
 from sqlalchemy.orm import relationship # relationship 임포트 추가
 from ..database import Base
+from sqlalchemy.dialects.postgresql import UUID
+import uuid
 
 class User(Base):
     __tablename__ = "Users"
 
-    user_id = Column(String(50), primary_key=True, unique=True, index=True)
+    user_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     password_hash = Column(String(255), nullable=False)
     email = Column(String(255), nullable=False, unique=True, index=True)
     name = Column(String(100), nullable=False)
