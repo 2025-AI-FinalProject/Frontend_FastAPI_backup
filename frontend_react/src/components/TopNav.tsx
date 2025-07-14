@@ -99,13 +99,30 @@ const TopNav: React.FC = () => {
 
     /**
      * 로그아웃을 처리하는 함수입니다.
-     * 로컬 스토리지에서 인증 토큰을 제거하고, Zustand 상태를 초기화한 후 로그인 페이지로 리다이렉트합니다.
+     * 서버에 토큰 무효화를 요청하고, 로컬 스토리지에서 인증 토큰을 제거한 후 
+     * Zustand 상태를 초기화하고 로그인 페이지로 리다이렉트합니다.
      */
-    const handleLogout = () => {
-        localStorage.removeItem("access_token"); // 로컬 스토리지에서 액세스 토큰 제거
-        localStorage.removeItem("refresh_token"); // 로컬 스토리지에서 리프레시 토큰 제거
-        logoutZustand(); // Zustand 앱 스토어의 로그아웃 액션 호출
-        navigate("/login"); // 로그인 페이지로 이동
+    const handleLogout = async () => { // ✅ async 추가
+        try {
+            const token = localStorage.getItem("access_token");
+            if (token) {
+                // ✅ [추가] 서버에 토큰을 무효화하도록 API 요청
+                await fetch("http://localhost:8000/auth/logout", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
+            }
+        } catch (error) {
+            console.error("서버 로그아웃 실패:", error);
+        } finally {
+            // ✅ API 요청 성공 여부와 관계없이 클라이언트에서는 항상 로그아웃 처리
+            localStorage.removeItem("access_token");
+            localStorage.removeItem("refresh_token");
+            logoutZustand();
+            navigate("/login");
+        }
     };
 
     // 현재 URL 경로를 파싱하여 첫 번째 세그먼트를 가져옵니다.
