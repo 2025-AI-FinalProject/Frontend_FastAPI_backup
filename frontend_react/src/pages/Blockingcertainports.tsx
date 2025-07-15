@@ -11,7 +11,7 @@ const Blockingcertainports: React.FC = () => {
         {/* 정의 */}
         <section className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
           <h2 className="flex items-center text-lg font-semibold text-gray-800 mb-2">
-            <span className="w-2 h-2 bg-violet-300 rounded-full mr-2"></span>
+            <span className="w-2 h-2 bg-indigo-400 rounded-full mr-2"></span>
             정의
           </h2>
           <p>
@@ -23,7 +23,7 @@ const Blockingcertainports: React.FC = () => {
         {/* 목적 */}
         <section className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
           <h2 className="flex items-center text-lg font-semibold text-gray-800 mb-2">
-            <span className="w-2 h-2 bg-amber-400 rounded-full mr-2"></span>
+            <span className="w-2 h-2 bg-indigo-300 rounded-full mr-2"></span>
             목적
           </h2>
           <p>
@@ -35,7 +35,7 @@ const Blockingcertainports: React.FC = () => {
         {/* 예시 시나리오 */}
         <section className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
           <h2 className="flex items-center text-lg font-semibold text-gray-800 mb-2">
-            <span className="w-2 h-2 bg-blue-300 rounded-full mr-2"></span>
+            <span className="w-2 h-2 bg-indigo-400 rounded-full mr-2"></span>
             예시 시나리오
           </h2>
           <ul className="list-disc pl-5 space-y-2 text-gray-700">
@@ -53,7 +53,7 @@ const Blockingcertainports: React.FC = () => {
         {/* 대체 대응 방안 */}
         <section className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
           <h2 className="flex items-center text-lg font-semibold text-gray-800 mb-2">
-            <span className="w-2 h-2 bg-red-300 rounded-full mr-2"></span>
+            <span className="w-2 h-2 bg-indigo-300 rounded-full mr-2"></span>
             대체 대응 방안
           </h2>
           <p>
@@ -65,7 +65,7 @@ const Blockingcertainports: React.FC = () => {
         {/* 법률적 근거 */}
         <section className="h-[155px] bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
           <h2 className="flex items-center text-lg font-semibold text-gray-800 mb-2">
-            <span className="w-2 h-2 bg-lime-500 rounded-full mr-2"></span>
+            <span className="w-2 h-2 bg-indigo-400 rounded-full mr-2"></span>
             법률적 근거
           </h2>
           <ul className="list-disc pl-5 space-y-2 text-gray-700">

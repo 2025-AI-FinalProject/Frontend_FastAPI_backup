@@ -94,9 +94,34 @@ const NotificationPanel: React.FC = () => {
      * 메시지 배열을 초기화하여 모든 대화 내역을 삭제합니다.
     */
     const confirmDeleteChatHistory = () => {
-        setMessages([]); // 메시지 배열을 빈 배열로 초기화 (모든 대화 삭제)
-        setShowDeleteConfirmation(false); // 삭제 확인 메시지 숨김
+        // 우선 메시지 초기화
+        setMessages([]);
+        setShowDeleteConfirmation(false);
+
+        // 1초 후 첫 메시지 출력
+        setTimeout(() => {
+            setMessages([
+                {
+                    id: 1,
+                    text: "최근 발생한 네트워크 이상 징후에 대한 LLM 요약본을 제공하고 있습니다.",
+                    sender: "bot",
+                },
+            ]);
+        }, 1000);
+
+        // 1.5초 후 두 번째 메시지 추가 출력
+        setTimeout(() => {
+            setMessages((prev) => [
+                ...prev,
+                {
+                    id: 1,
+                    text: "어떤 내용부터 확인하시겠어요?",
+                    sender: "bot",
+                },
+            ]);
+        }, 1500);
     };
+
 
     /**
      * 대화 내역 삭제를 취소했을 때 호출되는 핸들러.

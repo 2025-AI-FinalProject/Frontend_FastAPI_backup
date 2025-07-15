@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom"; // React Router 훅 임포트
-import { Bell, Menu, Star, LogOut, User, Home } from "lucide-react"; // Lucide React 아이콘 임포트
+import { Menu, Star, LogOut, User, Home, MessageSquare } from "lucide-react"; // Lucide React 아이콘 임포트
 import { motion, AnimatePresence } from "framer-motion"; // Framer Motion을 이용한 애니메이션
 import { useAppStore } from '../context/useAppStore'; // 전역 앱 상태 (사이드바, 알림, 사용자 등)
 import { useFavoritesStore } from '../context/useFavoritesStore'; // 즐겨찾기 상태
@@ -287,7 +287,7 @@ const TopNav: React.FC = () => {
                 {/* 알림 버튼 */}
                 <div className="relative">
                     <button onClick={toggleNotificationOpen} title="알림 토글">
-                        <Bell className="w-5 h-5 mt-1" /> {/* 알림 벨 아이콘 */}
+                        <MessageSquare className="w-5 h-5 mt-1" /> {/* 알림 벨 아이콘 */}
                         {/* 읽지 않은 알림이 있을 경우 빨간색 점 표시 */}
                         {hasUnread && (
                             <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-400 rounded-full border border-white" />
