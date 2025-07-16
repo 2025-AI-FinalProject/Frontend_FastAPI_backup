@@ -6,6 +6,8 @@ import { useNavigate } from "react-router-dom"; // React Router의 페이지 이
 import PasswordChange from "../components/PasswordChange"; // 비밀번호 변경 컴포넌트 임포트
 import MembershipWithdrawal from "../components/MembershipWithdrawal"; // 회원 탈퇴 컴포넌트 임포트
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 import toast from "react-hot-toast"; // 토스트 알림 라이브러리 임포트
 
 // --- MyPage 컴포넌트 정의 ---
@@ -64,7 +66,7 @@ const MyPage: React.FC = () => {
         const token = localStorage.getItem("accessToken");
         if (!token) return;
 
-        const response = await fetch("http://localhost:8000/auth/mypage", {
+        const response = await fetch(`${API_BASE_URL}/auth/mypage`, {
           method: "GET",
           headers: { "Authorization": `Bearer ${token}` },
         });
@@ -194,7 +196,7 @@ const MyPage: React.FC = () => {
       }
 
       // 서버의 비밀번호 확인 API에 POST 요청
-      const res = await fetch("http://localhost:8000/auth/verify-password", {
+      const res = await fetch(`${API_BASE_URL}/auth/verify-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -243,7 +245,7 @@ const MyPage: React.FC = () => {
 
         try {
             // 서버에 회원 탈퇴 API(DELETE) 요청
-            const response = await fetch("http://localhost:8000/auth/withdrawal", {
+            const response = await fetch(`${API_BASE_URL}/auth/withdrawal`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',

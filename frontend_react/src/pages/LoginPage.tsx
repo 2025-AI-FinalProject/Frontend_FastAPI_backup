@@ -5,6 +5,9 @@ import { images } from "../assets/assets"; // 이미지 에셋 (메인 비주얼
 import { useNavigate, useLocation } from "react-router-dom"; // React Router 훅 (페이지 이동, 현재 경로 정보)
 import { useAppStore } from "../context/useAppStore"; // Zustand 앱 전역 상태 스토어
 
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 // --- LoginPage 컴포넌트 정의 ---
 // 사용자가 로그인할 수 있는 페이지 컴포넌트입니다.
 // 사원번호, 비밀번호 입력 필드와 아이디 저장, 로그인 유지 옵션을 제공합니다.
@@ -83,7 +86,7 @@ const LoginPage: React.FC = () => {
 
         try {
             // 🔐 로그인 API 호출 (POST 요청)
-            const response = await fetch("http://localhost:8000/auth/login", {
+            const response = await fetch(`${API_BASE_URL}/auth/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" }, // JSON 형식으로 데이터 전송
                 body: JSON.stringify({ // 요청 본문에 사원번호와 비밀번호 포함
@@ -116,7 +119,7 @@ const LoginPage: React.FC = () => {
 
             // 🔎 사용자 정보 요청
             // 로그인 성공 후 액세스 토큰을 사용하여 사용자 마이페이지 정보 요청
-            const userRes = await fetch("http://localhost:8000/auth/mypage", {
+            const userRes = await fetch(`${API_BASE_URL}/auth/mypage`, {
                 headers: {
                     Authorization: `Bearer ${data.access_token}`, // 인증 헤더에 액세스 토큰 포함
                 },
