@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 import DownloadAuthModal from "../components/DownloadAuthModal";
 import { Eye, EyeOff } from "lucide-react";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_USERDB_URL = import.meta.env.VITE_API_USERDB_URL;
 
 // --- Zod 스키마 정의 ---
 const signUpSchema = z
@@ -58,7 +58,7 @@ const SignUpPage: React.FC = () => {
     const { confirmPassword, ...signUpData } = data;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/signup`, {
+      const response = await fetch(`${API_USERDB_URL}/auth/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(signUpData),
@@ -94,7 +94,7 @@ const SignUpPage: React.FC = () => {
     const loadingAuthToastId = toast.loading("인증 확인 중...");
 
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+      const response = await fetch(`${API_USERDB_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ emp_number: empNumber, password }),
@@ -107,7 +107,7 @@ const SignUpPage: React.FC = () => {
         const downloadingToastId = toast.loading("애플리케이션 다운로드 중...");
 
         try {
-          const downloadResponse = await fetch(`${API_BASE_URL}/api/v1/agent/download`, {
+          const downloadResponse = await fetch(`${API_USERDB_URL}/api/v1/agent/download`, {
             method: "GET",
             headers: { Authorization: `Bearer ${access_token}` },
           });

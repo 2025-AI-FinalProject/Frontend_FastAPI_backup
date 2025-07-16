@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link as LinkIcon, Plug, PlugZap, RefreshCw } from "lucide-react"; // 아이콘 임포트
 import {
     LineChart,
@@ -7,8 +7,13 @@ import {
     YAxis,
     ResponsiveContainer,
     Tooltip, // Tooltip 컴포넌트 임포트: 차트 데이터 포인트에 대한 정보 표시
+    CartesianGrid, // CartesianGrid 컴포넌트 임포트: 그리드 라인 추가
 } from "recharts";
 import LogFeedModal from "../components/LogFeedModal"; // 로그 상세 정보를 보여주는 모달 컴포넌트
+
+// API URL (환경 변수에서 가져옴)
+// .env 파일에 VITE_API_DATADB_URL=http://210.119.12.96:8000 와 같이 정의되어야 합니다.
+const API_DATADB_URL = import.meta.env.VITE_API_DATADB_URL;
 
 // 현재 시각을 기준으로 10분 단위의 시간 레이블을 생성하는 헬퍼 함수
 const getCurrentTimeLabel = (baseDate?: Date): string => {
@@ -39,6 +44,32 @@ interface PieDataItem {
     value: number; // 해당 위협 유형의 발생 횟수
 }
 
+// 로그 리스트 API 응답 데이터 구조 (개별 로그 항목)
+interface LogEntry {
+    detected_at: string;
+    attack_type: string | null; // 공격이 아닐 경우 null일 수 있음
+    source_address: string | null;
+    hostname: string | null;
+    process_name: string | null;
+}
+
+// 통계 API 응답 데이터 구조
+interface LogStats {
+    total_threats: number;
+    top_threat_type: string;
+    distribution: {
+        type: string;
+        count: number;
+    }[];
+    threat_type_count: number; // 추가: 통계 API에서 반환하는 총 위협 종류 수
+}
+
+// 24시간 로그 카운트 API 응답 데이터 구조
+interface LogCount24h {
+    log_count_24h: number;
+}
+
+
 // SystemNetworkMonitoring 컴포넌트 정의
 const SystemNetworkMonitoring: React.FC = () => {
     // 시간대별 로그 데이터를 저장하는 상태. 초기값은 10분 간격의 0 값 데이터
@@ -53,30 +84,27 @@ const SystemNetworkMonitoring: React.FC = () => {
 
     // 위협 유형별 분포 데이터를 저장하는 상태. 초기값은 모든 위협 유형에 대해 0
     const [pieData, setPieData] = useState<PieDataItem[]>([
-        { name: "DCOM공격", value: 0 },
+        { name: "DCOM 공격", value: 0 },
         { name: "DLL 하이재킹", value: 0 },
         { name: "WMI 공격", value: 0 },
         { name: "방어 회피", value: 0 },
-        { name: "원격 서비스 공격(일반)", value: 0 },
-        { name: "원격 서비스 공격(WinRM)", value: 0 },
+        { name: "원격 서비스 공격 (일반)", value: 0 },
+        { name: "원격 서비스 공격 (WinRM)", value: 0 },
         { name: "원격 서비스 악용", value: 0 },
-        { name: "지속성(계정 생성)", value: 0 },
+        { name: "지속성 (계정 생성)", value: 0 },
         { name: "스케줄 작업 공격", value: 0 },
     ]);
 
-    // 실시간 로그 피드 데이터를 저장하는 상태. 초기값으로 100개의 더미 데이터 생성
-    const [logFeedData, setLogFeedData] = useState(
-        Array.from({ length: 100 }).map((_, i) => ({
-            time: new Date(Date.now() - i * 1000 * 60).toISOString(), // 현재 시각에서 과거로 갈수록 시간 감소
-            status: "정상", // 기본 상태는 "정상"
-            result: "-", // 기본 결과는 "-"
-            ip: `192.168.0.${i % 255}`, // 랜덤 IP 주소
-            process: "svchost.exe", // 더미 프로세스명
-            host: `host-${i}`, // 더미 호스트명
-        }))
-    );
+    // 실시간 로그 피드 데이터를 저장하는 상태. API에서 받아올 것이므로 초기값은 빈 배열
+    const [logFeedData, setLogFeedData] = useState<LogEntry[]>([]);
 
-    // 차트 시간 동기화를 위한 기준 시간 상태
+    // 총 탐지된 위협 수를 저장하는 상태
+    const [totalDetectedThreats, setTotalDetectedThreats] = useState<number>(0);
+
+    // 24시간 동안 수집된 로그 수를 저장하는 상태
+    const [logCount24h, setLogCount24h] = useState<number>(0); // 새 상태 추가
+
+    // 차트 시간 동기화를 위한 기준 시간 상태 (지금은 사용하지 않지만 나중에 필요할 수 있어 남겨둠)
     const [baseTime, setBaseTime] = useState<Date>(new Date());
     // 로그 피드 모달의 열림/닫힘 상태
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -99,208 +127,247 @@ const SystemNetworkMonitoring: React.FC = () => {
         return maxThreat.name; // 최다 발생 위협 유형 이름 반환
     }, [pieData]);
 
-    // useMemo를 사용하여 logData가 변경될 때만 총 탐지된 위협 수를 계산
-    const totalDetectedThreats = useMemo(() => {
-        return logData.reduce((acc, item) => acc + item.value, 0); // 모든 시간대의 value 합산
-    }, [logData]);
-
     // useMemo를 사용하여 pieData가 변경될 때만 탐지된 위협 종류 개수를 계산
     const detectedThreatTypesCount = useMemo(() => {
         const activeThreats = pieData.filter(item => item.value > 0); // value가 0보다 큰 위협만 필터링
         if (activeThreats.length === 0) {
-            return "없음"; // 탐지된 위협이 없으면 "없음" 반환
+            return 0; // 탐지된 위협이 없으면 숫자 0 반환 (Y축 계산을 위해)
         }
-        return `${activeThreats.length}건`; // 탐지된 위협 종류의 개수 반환
+        return activeThreats.length; // 탐지된 위협 종류의 개수 반환 (숫자)
     }, [pieData]);
 
-    // 5초마다 데이터를 업데이트하는 useEffect 훅
-    useEffect(() => {
-        const interval = setInterval(() => {
-            // logData (시간대별 위협 발생 추이) 업데이트
-            setLogData((prev) => {
-                // 이전 데이터의 마지막 시간 또는 현재 기준 시간으로 새로운 시간 계산
-                const lastTimeStr = prev.length
-                    ? prev[prev.length - 1].time
-                    : getCurrentTimeLabel(baseTime);
-                const [h, m] = lastTimeStr.split(":").map(Number);
-                const newDate = new Date(baseTime);
-                newDate.setHours(h);
-                newDate.setMinutes(m + 10); // 10분 추가
-                const newTime = getCurrentTimeLabel(newDate); // 새로운 시간 레이블 생성
-                // 최신 5개 데이터 유지하고 새 데이터 추가
-                return [
-                    ...prev.slice(-5),
-                    { time: newTime, value: Math.floor(Math.random() * 10) + 1 }, // 1~10 사이의 랜덤 값
-                ];
+    // API URL 정의
+    const API_LOGS_LIST_URL = `${API_DATADB_URL}/api/dashboard/logs/list?skip=0&limit=100`;
+    const API_LOGS_STATS_URL = `${API_DATADB_URL}/api/dashboard/logs/stats`;
+    const API_LOGS_COUNT_24H_URL = `${API_DATADB_URL}/api/dashboard/logs/count-24h`; // 새 API URL 추가
+
+    // 모든 API 호출이 성공했는지 여부를 추적하는 변수 (컴포넌트 스코프)
+    let allApiCallsSuccessful = true;
+
+    // 실시간으로 자주 갱신되어야 하는 데이터 (상단 카드, 막대 그래프, 로그 피드)를 가져오는 함수
+    const fetchRealtimeData = useCallback(async () => {
+        try {
+            if (!API_DATADB_URL) {
+                console.error("API_DATADB_URL이 .env 파일에 정의되지 않았습니다.");
+                setIsConnected(false);
+                return;
+            }
+
+            allApiCallsSuccessful = true; // 매 호출마다 초기화
+
+            // 1. 로그 리스트 데이터 가져오기 (실시간 로그 피드에 사용)
+            const logListResponse = await fetch(API_LOGS_LIST_URL);
+            if (!logListResponse.ok) {
+                allApiCallsSuccessful = false;
+                throw new Error(`logs/list HTTP error! status: ${logListResponse.status}`);
+            }
+            const logListData: LogEntry[] = await logListResponse.json();
+            setLogFeedData(logListData.slice(0, 100)); // 최신 100개만 유지
+
+            // 2. 로그 통계 데이터 가져오기 (총 탐지된 위협, 최다 발생 유형, 유형별 분포, 탐지된 위협 종류에 사용)
+            const logStatsResponse = await fetch(API_LOGS_STATS_URL);
+            if (!logStatsResponse.ok) {
+                allApiCallsSuccessful = false;
+                throw new Error(`logs/stats HTTP error! status: ${logStatsResponse.status}`);
+            }
+            const logStatsData: LogStats = await logStatsResponse.json();
+
+            setTotalDetectedThreats(logStatsData.total_threats);
+
+            setPieData(prevPieData => {
+                const newPieDataMap = new Map(prevPieData.map(item => [item.name, { ...item, value: 0 }]));
+                logStatsData.distribution.forEach(apiItem => {
+                    newPieDataMap.set(apiItem.type, { name: apiItem.type, value: apiItem.count });
+                });
+                let updatedPieData = Array.from(newPieDataMap.values());
+                updatedPieData.sort((a, b) => b.value - a.value);
+                return updatedPieData;
             });
 
-            // logFeedData (실시간 로그 피드) 업데이트
-            setLogFeedData((prev) => {
-                const newEntry = {
-                    time: new Date().toISOString(), // 현재 시각
-                    status: Math.random() > 0.7 ? "위협" : "정상", // 30% 확률로 "위협"
-                    result: Math.random() > 0.7 ? "의심행위 탐지" : "-", // 30% 확률로 "의심행위 탐지"
-                    ip: `192.168.0.${Math.floor(Math.random() * 255)}`, // 랜덤 IP
-                    process: "svchost.exe",
-                    host: `host-${prev.length}`,
-                };
-                // 새로운 로그를 맨 앞에 추가하고 총 100개만 유지
-                return [newEntry, ...prev].slice(0, 100);
-            });
+            // 3. 24시간 로그 카운트 데이터 가져오기
+            const logCount24hResponse = await fetch(API_LOGS_COUNT_24H_URL);
+            if (!logCount24hResponse.ok) {
+                allApiCallsSuccessful = false;
+                throw new Error(`logs/count-24h HTTP error! status: ${logCount24hResponse.status}`);
+            }
+            const logCount24hData: LogCount24h = await logCount24hResponse.json();
+            setLogCount24h(logCount24hData.log_count_24h);
 
-            // pieData (위협 유형별 분포) 업데이트
-            setPieData((prev) =>
-                prev.map((item) => ({
-                    ...item,
-                    // 20% 확률로 0, 80% 확률로 1~10 사이의 랜덤 값
-                    value: Math.random() < 0.2 ? 0 : Math.floor(Math.random() * 10) + 1,
-                }))
-            );
-        }, 5000); // 5초마다 실행
+            setIsConnected(allApiCallsSuccessful);
 
-        // 컴포넌트 언마운트 시 인터벌 정리
-        return () => clearInterval(interval);
-    }, [baseTime]); // baseTime이 변경될 때만 이펙트 재실행
-
-    // "새로고침" 버튼 클릭 시 호출되는 핸들러
-    const handleRefresh = () => {
-        const now = new Date(); // 현재 시각으로 기준 시간 재설정
-        setBaseTime(now);
-        // logData를 초기값(모두 0)으로 재설정하며, 현재 시간 기준으로 10분 간격으로 과거 시간들을 설정
-        setLogData([
-            { time: getCurrentTimeLabel(new Date(now.getTime() - 50 * 60 * 1000)), value: 0 },
-            { time: getCurrentTimeLabel(new Date(now.getTime() - 40 * 60 * 1000)), value: 0 },
-            { time: getCurrentTimeLabel(new Date(now.getTime() - 30 * 60 * 1000)), value: 0 },
-            { time: getCurrentTimeLabel(new Date(now.getTime() - 20 * 60 * 1000)), value: 0 },
-            { time: getCurrentTimeLabel(new Date(now.getTime() - 10 * 60 * 1000)), value: 0 },
-            { time: getCurrentTimeLabel(now), value: 0 },
-        ]);
-
-        // pieData도 초기값(모두 0)으로 재설정
-        setPieData([
-            { name: "DCOM공격", value: 0 },
-            { name: "DLL 하이재킹", value: 0 },
-            { name: "WMI 공격", value: 0 },
-            { name: "방어 회피", value: 0 },
-            { name: "원격 서비스 공격(일반)", value: 0 },
-            { name: "원격 서비스 공격(WinRM)", value: 0 },
-            { name: "원격 서비스 악용", value: 0 },
-            { name: "지속성(계정 생성)", value: 0 },
-            { name: "스케줄 작업 공격", value: 0 },
-        ]);
-
-        // logFeedData도 초기화된 더미 데이터로 재설정 (최근 10개만)
-        const newLogs = [];
-        for (let i = 0; i < 10; i++) {
-            const dt = new Date(now);
-            dt.setSeconds(dt.getSeconds() - i * 5); // 5초 간격으로 과거 시간 설정
-            newLogs.push({
-                time: dt.toISOString(),
-                status: "정상",
-                result: "-",
-                ip: `192.168.0.${i}`,
-                process: "svchost.exe",
-                host: `host-${i}`,
-            });
+        } catch (error) {
+            console.error("실시간 데이터 가져오기 오류:", error);
+            setIsConnected(false);
+            // 오류 발생 시 데이터 초기화 (실시간 섹션에만 해당)
+            setLogFeedData([]);
+            setTotalDetectedThreats(0);
+            setLogCount24h(0);
+            setPieData([
+                { name: "DCOM 공격", value: 0 }, { name: "DLL 하이재킹", value: 0 }, { name: "WMI 공격", value: 0 },
+                { name: "방어 회피", value: 0 }, { name: "원격 서비스 공격 (일반)", value: 0 }, { name: "원격 서비스 공격 (WinRM)", value: 0 },
+                { name: "원격 서비스 악용", value: 0 }, { name: "지속성 (계정 생성)", value: 0 }, { name: "스케줄 작업 공격", value: 0 },
+            ]);
         }
-        setLogFeedData(newLogs);
-    };
+    }, [API_LOGS_LIST_URL, API_LOGS_STATS_URL, API_LOGS_COUNT_24H_URL]); // 의존성 추가 (API URL 변경 시 다시 생성)
 
-    // 연결 상태에 따라 다른 아이콘을 반환하는 함수
-    const getStatusIcon = () => {
+    // 라인 차트 데이터(10분 간격으로 갱신)를 가져오는 함수
+    const fetchLineChartData = useCallback(async () => {
+        try {
+            if (!API_DATADB_URL) {
+                console.error("API_DATADB_URL이 .env 파일에 정의되지 않았습니다.");
+                return; // 연결 상태는 fetchRealtimeData에서 관리하므로 여기서는 반환
+            }
+
+            const logStatsResponse = await fetch(API_LOGS_STATS_URL);
+            if (!logStatsResponse.ok) {
+                throw new Error(`logs/stats HTTP error! status: ${logStatsResponse.status}`);
+            }
+            const logStatsData: LogStats = await logStatsResponse.json();
+
+            const now = new Date();
+            const updatedLogData = Array.from({ length: 6 }).map((_, i) => {
+                const date = new Date(now.getTime() - (5 - i) * 10 * 60 * 1000);
+                return {
+                    time: getCurrentTimeLabel(date),
+                    value: logStatsData.threat_type_count, // threat_type_count 값 사용
+                };
+            });
+            setLogData(updatedLogData);
+
+        } catch (error) {
+            console.error("라인 차트 데이터 가져오기 오류:", error);
+            // 오류 발생 시 라인 차트 데이터 초기화
+            const now = new Date();
+            setLogData(Array.from({ length: 6 }).map((_, i) => {
+                const date = new Date(now.getTime() - (5 - i) * 10 * 60 * 1000);
+                return { time: getCurrentTimeLabel(date), value: 0 };
+            }));
+        }
+    }, [API_LOGS_STATS_URL]); // 의존성 추가 (API URL 변경 시 다시 생성)
+
+    // 5초마다 실시간 데이터 갱신
+    useEffect(() => {
+        fetchRealtimeData(); // 컴포넌트 마운트 시 최초 데이터 가져오기
+        const realtimeInterval = setInterval(fetchRealtimeData, 5000); // 5초마다 반복 호출
+
+        return () => clearInterval(realtimeInterval); // 컴포넌트 언마운트 시 인터벌 정리
+    }, [fetchRealtimeData]); // fetchRealtimeData가 변경될 때 다시 실행
+
+    // 10분마다 라인 차트 데이터 갱신
+    useEffect(() => {
+        fetchLineChartData(); // 컴포넌트 마운트 시 최초 데이터 가져오기
+        const lineChartInterval = setInterval(fetchLineChartData, 10 * 60 * 1000); // 10분마다 반복 호출
+
+        return () => clearInterval(lineChartInterval); // 컴포넌트 언마운트 시 인터벌 정리
+    }, [fetchLineChartData]); // fetchLineChartData가 변경될 때 다시 실행
+
+
+    // "새로고침" 버튼 클릭 시 호출되는 핸들러 (useCallback으로 메모이제이션)
+    const handleRefresh = useCallback(() => {
+        // 모든 상태를 초기값으로 재설정하여 API 재호출 유도
+        setTotalDetectedThreats(0);
+        setLogCount24h(0);
+        setPieData([
+            { name: "DCOM 공격", value: 0 }, { name: "DLL 하이재킹", value: 0 }, { name: "WMI 공격", value: 0 },
+            { name: "방어 회피", value: 0 }, { name: "원격 서비스 공격 (일반)", value: 0 }, { name: "원격 서비스 공격 (WinRM)", value: 0 },
+            { name: "원격 서비스 악용", value: 0 }, { name: "지속성 (계정 생성)", value: 0 }, { name: "스케줄 작업 공격", value: 0 },
+        ]);
+        setLogFeedData([]);
+        setLogData(Array.from({ length: 6 }).map((_, i) => {
+            const date = new Date(new Date().getTime() - (5 - i) * 10 * 60 * 1000);
+            return { time: getCurrentTimeLabel(date), value: 0 };
+        }));
+        setIsConnected(null); // 연결 상태 초기화
+
+        // 모든 데이터 패치를 강제로 재시작
+        fetchRealtimeData();
+        fetchLineChartData();
+
+    }, [fetchRealtimeData, fetchLineChartData]); // 의존성 추가
+
+
+    // 연결 상태에 따라 다른 아이콘을 반환하는 함수 (useCallback으로 메모이제이션)
+    const getStatusIcon = useCallback(() => {
         if (isConnected === true) return <Plug className="w-4 h-4 mr-1" />; // 연결 됨
         if (isConnected === false) return <PlugZap className="w-4 h-4 mr-1" />; // 연결 끊김
         return <LinkIcon className="w-4 h-4 mr-1" />; // 기본 (알 수 없음)
-    };
+    }, [isConnected]);
 
-    // 연결 상태에 따라 다른 텍스트를 반환하는 함수
-    const getStatusText = () => {
+    // 연결 상태에 따라 다른 텍스트를 반환하는 함수 (useCallback으로 메모이제이션)
+    const getStatusText = useCallback(() => {
         if (isConnected === true) return "연결 됨";
         if (isConnected === false) return "연결 끊김";
         return "연결 상태"; // 기본 (알 수 없음)
-    };
+    }, [isConnected]);
 
     // 각 위협 유형에 대한 설명을 담고 있는 객체
     const threatDescriptions: { [key: string]: string } = {
-        "DCOM공격": "DCOM 취약점을 이용한 공격입니다.",
+        "DCOM 공격": "DCOM 취약점을 이용한 공격입니다.",
         "DLL 하이재킹": "정상 DLL을 교체하여 악성 코드를 실행시키는 기법입니다.",
         "WMI 공격": "WMI를 이용한 원격 명령 실행 또는 정보 수집입니다.",
         "방어 회피": "탐지 우회를 위한 다양한 기술입니다.",
-        "원격 서비스 공격(일반)": "RDP 등 일반 서비스의 원격 공격입니다.",
-        "원격 서비스 공격(WinRM)": "WinRM을 활용한 명령 실행 공격입니다.",
+        "원격 서비스 공격 (일반)": "RDP 등 일반 원격 서비스를 악용하는 공격입니다.",
+        "원격 서비스 공격 (WinRM)": "WinRM을 활용하여 원격 명령을 실행하는 공격입니다.",
         "원격 서비스 악용": "기존 원격 서비스를 악용하는 행위입니다.",
-        "지속성(계정 생성)": "계정 생성을 통한 시스템 지속 접근 시도입니다.",
-        "스케줄 작업 공격": "스케줄러 등록을 통한 악성코드 실행입니다.",
+        "지속성 (계정 생성)": "계정 생성을 통해 시스템 지속 접근을 시도하는 공격입니다.",
+        "스케줄 작업 공격": "스케줄러 등록을 통해 악성코드를 실행하는 공격입니다.",
+        // API에서 올 수 있는 다른 공격 유형에 대한 설명 추가 가능
     };
 
-    // pieData의 모든 value 합계 (바 차트 너비 계산에 사용)
-    const pieTotal = pieData.reduce((acc, item) => acc + item.value, 0);
+    const FIXED_BAR_CHART_WIDTH = 570; // 바 차트의 고정된 전체 너비 (px)
+    const MIN_BAR_WIDTH_PX = 2; // 각 바의 최소 너비
 
     // 전체 너비를 기준으로 각 바의 픽셀 너비를 계산하고 반올림 오차를 조정하는 함수
-    // useMemo를 사용하여 pieData 또는 pieTotal이 변경될 때만 다시 계산
-    const calculateRoundedWidths = useMemo(() => (
-        (data: PieDataItem[], totalContainerPixels: number): number[] => {
-            if (pieTotal === 0 || data.length === 0) {
-                return data.map(() => 0); // 데이터가 없으면 모든 너비를 0으로 반환
+    const calculateFinalWidths = useMemo(() => {
+        return (data: PieDataItem[], totalContainerPixels: number): number[] => {
+            if (data.length === 0) {
+                return [];
             }
 
-            // 각 항목의 비율에 따른 원시 픽셀 너비 계산
-            let rawPixels = data.map(item => (item.value / pieTotal) * totalContainerPixels);
-            // 소수점을 반올림하여 정수 픽셀 너비 계산
-            let roundedPixels = rawPixels.map(p => Math.round(p));
+            const totalValue = data.reduce((sum, item) => sum + item.value, 0);
+            let calculatedWidths: number[] = new Array(data.length).fill(0);
 
-            // 현재 반올림된 픽셀 너비의 합계와 목표 너비(totalContainerPixels)의 차이 계산
-            let currentSum = roundedPixels.reduce((acc, width) => acc + width, 0);
-            let difference = totalContainerPixels - currentSum; // 양수이면 부족, 음수이면 초과
+            if (totalValue === 0) {
+                // 모든 값이 0인 경우, 모든 바에 MIN_BAR_WIDTH_PX 할당
+                calculatedWidths = data.map(() => MIN_BAR_WIDTH_PX);
+            } else {
+                // 값이 있는 경우 비율에 따라 너비 계산
+                let rawPixels = data.map(item => (item.value / totalValue) * totalContainerPixels);
 
-            // 원시 픽셀 너비가 큰 순서대로 정렬하여 오차를 분배할 인덱스를 찾음
-            let sortedIndices = rawPixels
-                .map((value, index) => ({ value: value, index: index }))
+                // 각 바에 MIN_BAR_WIDTH_PX를 적용하면서 비율 계산
+                calculatedWidths = rawPixels.map(px => Math.max(MIN_BAR_WIDTH_PX, Math.round(px)));
+            }
+
+            // 전체 바의 현재 합계와 목표 너비 비교하여 오차 조정
+            let currentSum = calculatedWidths.reduce((acc, width) => acc + width, 0);
+            let difference = totalContainerPixels - currentSum;
+
+            // 오차 분배를 위해 원시 픽셀 값에 따라 정렬된 인덱스 목록 (값이 큰 순서대로 오차 분배)
+            // 주의: totalValue가 0일 경우 rawPixels가 모두 0이므로, 이때는 원래 인덱스 순서대로 정렬 (의미 없지만 안전하게)
+            let sortedIndices = data
+                .map((item, index) => ({ value: item.value, index: index }))
                 .sort((a, b) => b.value - a.value);
 
-            if (sortedIndices.length === 0) {
-                return data.map(() => 0); // 정렬할 항목이 없으면 0으로 반환
-            }
 
-            // 차이만큼 픽셀을 조정 (양수이면 더하고, 음수이면 뺌)
+            // 차이만큼 픽셀 조정 (양수이면 더하고, 음수이면 뺌)
+            // MIN_BAR_WIDTH_PX보다 작아지지 않도록 주의
             const numAdjustments = Math.abs(difference);
             for (let i = 0; i < numAdjustments; i++) {
-                const targetIndex = sortedIndices[i % sortedIndices.length].index; // 순환하며 조정
-                if (difference > 0) {
-                    roundedPixels[targetIndex]++; // 픽셀 추가
-                } else {
-                    roundedPixels[targetIndex] = Math.max(0, roundedPixels[targetIndex] - 1); // 픽셀 감소 (최소 0 유지)
+                const targetIndex = sortedIndices[i % sortedIndices.length].index;
+                if (difference > 0) { // 너비가 부족하면 추가
+                    calculatedWidths[targetIndex]++;
+                } else { // 너비가 초과하면 감소
+                    calculatedWidths[targetIndex] = Math.max(MIN_BAR_WIDTH_PX, calculatedWidths[targetIndex] - 1);
                 }
             }
 
-            return roundedPixels;
-        }
-    ), [pieTotal]); // pieTotal이 변경될 때만 calculateRoundedWidths 함수 재생성
+            // 최종적으로 음수 값이 생기지 않도록 다시 한번 확인
+            return calculatedWidths.map(px => Math.max(0, px));
+        };
+    }, []); // 의존성 없음, 함수 자체는 고정
 
-    const FIXED_BAR_CHART_WIDTH = 570; // 바 차트의 고정된 전체 너비 (px)
-    // 계산된 원시 픽셀 너비 (오차 조정 전)
-    const rawPixelWidths = calculateRoundedWidths(pieData, FIXED_BAR_CHART_WIDTH);
-
-    // 최소 너비(MIN_BAR_WIDTH_PX)를 고려하여 최종 바의 픽셀 너비를 결정하는 useMemo
-    const finalBarPixelWidths = useMemo(() => {
-        const MIN_BAR_WIDTH_PX = 2; // 각 바의 최소 너비
-
-        if (pieTotal === 0 || pieData.length === 0) {
-            // 데이터가 없거나 총합이 0인 경우, 모든 바에 최소 너비를 할당
-            // 단, 전체 너비를 초과하지 않도록 마지막 아이템 조정
-            const minWidthPerItem = Math.max(MIN_BAR_WIDTH_PX, Math.floor(FIXED_BAR_CHART_WIDTH / Math.max(1, pieData.length)));
-            const widths = pieData.map(() => minWidthPerItem);
-
-            const currentTotal = widths.reduce((sum, w) => sum + w, 0);
-            if (currentTotal > FIXED_BAR_CHART_WIDTH && widths.length > 0) {
-                widths[widths.length - 1] = Math.max(MIN_BAR_WIDTH_PX, widths[widths.length - 1] - (currentTotal - FIXED_BAR_CHART_WIDTH));
-            }
-            return widths;
-        } else {
-            // 데이터가 있는 경우, 0픽셀로 계산된 바를 최소 너비로 조정
-            return rawPixelWidths.map(px => px === 0 ? MIN_BAR_WIDTH_PX : px);
-        }
-    }, [rawPixelWidths, pieTotal, pieData.length]); // rawPixelWidths, pieTotal, pieData.length가 변경될 때만 재계산
+    // 실제 바 너비를 계산
+    const finalBarPixelWidths = calculateFinalWidths(pieData, FIXED_BAR_CHART_WIDTH);
 
     // 컴포넌트 렌더링
     return (
@@ -330,10 +397,11 @@ const SystemNetworkMonitoring: React.FC = () => {
             {/* 통계 카드 섹션 */}
             <div className="grid grid-cols-4 gap-4 mb-6">
                 {[
-                    { label: "수집된 로그 수 (24H)", value: "12348 개", valueClass: "text-black text-xl" },
-                    { label: "총 탐지된 위협", value: totalDetectedThreats, valueClass: "text-red-400 text-2xl" },
+                    // logCount24h 상태를 사용하여 24시간 로그 수를 표시
+                    { label: "수집된 로그 수 (24H)", value: `${logCount24h.toLocaleString()} 개`, valueClass: "text-black text-xl" },
+                    { label: "총 탐지된 위협", value: totalDetectedThreats.toLocaleString(), valueClass: "text-red-400 text-2xl" }, // toLocaleString() 적용
                     { label: "최다 발생 위협 유형", value: mostFrequentThreat, valueClass: "text-black text-lg" },
-                    { label: "탐지된 위협 종류", value: detectedThreatTypesCount, valueClass: "text-black text-lg" },
+                    { label: "탐지된 위협 종류", value: `${detectedThreatTypesCount}건`, valueClass: "text-black text-lg" },
                 ].map((card, idx) => (
                     <div
                         key={idx}
@@ -358,8 +426,10 @@ const SystemNetworkMonitoring: React.FC = () => {
                     </div>
                     <ResponsiveContainer width="100%" height={230}>
                         <LineChart data={logData} margin={{ left: -20, right: 25, top: 10, bottom: -10 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" /> {/* 점선 그리드 추가 */}
                             <XAxis dataKey="time" stroke="#999" /> {/* X축 (시간) */}
-                            <YAxis domain={[0, 10]} ticks={[2, 4, 6, 8, 10]} stroke="#999" /> {/* Y축 (값), 도메인과 틱 설정 */}
+                            {/* Y축 (값), 도메인과 틱을 [0, 10]으로 고정 */}
+                            <YAxis domain={[0, 10]} ticks={[2, 4, 6, 8, 10]} stroke="#999" />
                             <Tooltip /> {/* Tooltip 컴포넌트: 호버 시 데이터 값 표시 */}
                             <Line type="monotone" dataKey="value" stroke="#B9CDFF" strokeWidth={2} dot={false} /> {/* 라인 그래프 */}
                         </LineChart>
@@ -392,7 +462,7 @@ const SystemNetworkMonitoring: React.FC = () => {
                         })}
                     </div>
                     {/* 위협 유형별 설명 목록 */}
-                    <div className="mt-6 h-[180px] text-sm text-gray-700 space-y-2 border border-gray-200 p-3 rounded overflow-y-auto">
+                    <div className="mt-6 text-sm text-gray-700 space-y-2 border border-gray-200 p-3 rounded overflow-y-auto" style={{ maxHeight: '180px' }}> {/* 높이 고정 및 스크롤 바 유지 */}
                         {pieData.map((item, idx) => (
                             <div key={item.name} className="flex items-start gap-2">
                                 {/* 색상 인디케이터 (바 차트 색상과 동일) */}
@@ -418,37 +488,53 @@ const SystemNetworkMonitoring: React.FC = () => {
             <div className="bg-gray-50 min-h-[230px] p-4 rounded border border-gray-200 shadow-md transition flex flex-col flex-grow overflow-hidden">
                 <div className="shrink-0 flex items-center justify-between">
                     <div className="text-gray-600 font-semibold mb-2 pl-1">실시간 로그 피드</div>
-                    {/* 상세보기 버튼 */}
+                    {/* 로그 전체 보기 버튼 */}
                     <button className="text-xs text-gray-600 underline mb-2 mr-1" type="button" onClick={() => setIsModalOpen(true)}>
-                        상세보기
+                        로그 전체 보기
                     </button>
                 </div>
                 {/* 로그 피드 테이블 헤더 */}
-                <div className="grid grid-cols-6 mt-1 gap-2 text-sm font-semibold text-gray-700 border-b border-gray-200 pb-2">
-                    <div className="ml-13">수집 시각</div>
-                    <div className="ml-13">상태</div>
-                    <div className="ml-3">위협 결과</div>
-                    <div className="ml-6">발생 IP</div>
-                    <div className="ml-1">프로세스명</div>
-                    <div className="ml-1">호스트명</div>
+                <div className="grid grid-cols-5 mt-1 gap-2 text-sm font-semibold text-gray-700 border-b border-gray-200 pb-2">
+                    <div className="text-center">수집 시각</div>
+                    <div className="text-center">공격 유형</div>
+                    <div className="text-center">발생 IP</div>
+                    <div className="text-center">호스트명</div>
+                    <div className="text-center">프로세스명</div>
                 </div>
                 {/* 로그 피드 데이터 목록 */}
                 <div className="overflow-y-auto mt-1 flex-grow">
                     {logFeedData.slice(0, 7).map((item, index) => ( // 최신 7개 로그만 표시
                         <div
                             key={index}
-                            className={`grid grid-cols-6 gap-2 text-sm border-b border-gray-100 py-1.5 cursor-default ${
-                                item.status === "위협" ? "text-red-400 font-semibold" : "text-gray-600" // 위협 상태에 따라 색상 변경
+                            className={`grid grid-cols-5 gap-2 text-sm border-b border-gray-100 py-1.5 cursor-default ${
+                                // attack_type이 null이 아니면 "위협"으로 간주
+                                item.attack_type !== null ? "text-red-400 font-semibold" : "text-gray-600"
                             }`}
                         >
-                            <div title={item.time}>{new Date(item.time).toLocaleString()}</div> {/* 전체 시간을 툴팁으로 표시 */}
-                            <div className="ml-13">{item.status}</div>
-                            <div>{item.result}</div>
-                            <div>{item.ip}</div>
-                            <div>{item.process}</div>
-                            <div>{item.host}</div>
+                            {/* detected_at을 Date 객체로 변환하여 한국 지역화 포맷으로 표시 (오전/오후 포함) */}
+                            <div className="text-center" title={item.detected_at}>
+                                {new Date(item.detected_at).toLocaleString('ko-KR', {
+                                    year: 'numeric',
+                                    month: '2-digit',
+                                    day: '2-digit',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    // second: '2-digit', // 초는 제외
+                                    hour12: true // 오전/오후 형식
+                                })}
+                            </div>
+                            <div className="text-center">{item.attack_type || '-'}</div> {/* attack_type이 null이면 '-' 표시 */}
+                            <div className="text-center">{item.source_address || '-'}</div> {/* source_address가 null이면 '-' 표시 */}
+                            <div className="text-center">{item.hostname || '-'}</div> {/* hostname이 null이면 '-' 표시 */}
+                            <div className="text-center">{item.process_name || '-'}</div> {/* process_name이 null이면 '-' 표시 */}
                         </div>
                     ))}
+                    {/* 로그 데이터가 없을 경우 메시지 */}
+                    {logFeedData.length === 0 && (
+                        <div className="text-center text-gray-500 py-4">
+                            로그 데이터가 없습니다.
+                        </div>
+                    )}
                 </div>
             </div>
 
