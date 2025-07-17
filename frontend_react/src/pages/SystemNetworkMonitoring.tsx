@@ -10,6 +10,7 @@ import {
     CartesianGrid, // CartesianGrid 컴포넌트 임포트: 그리드 라인 추가
 } from "recharts";
 import LogFeedModal from "../components/LogFeedModal"; // 로그 상세 정보를 보여주는 모달 컴포넌트
+import SystemChart from "../components/SystemChart"; // 차트 컴포넌트
 
 // API URL (환경 변수에서 가져옴)
 // .env 파일에 VITE_API_DATADB_URL=http://210.119.12.96:8000 와 같이 정의되어야 합니다.
@@ -416,25 +417,7 @@ const SystemNetworkMonitoring: React.FC = () => {
             {/* 차트 섹션: 시간대별 위협 발생 추이 및 위협 유형별 분포 */}
             <div className="grid grid-cols-2 gap-4 mb-6">
                 {/* 시간대별 위협 발생 추이 라인 차트 */}
-                <div
-                    className="bg-gray-50 p-4 rounded border border-gray-200 shadow-md hover:shadow-lg hover:border-gray-300 transition focus:outline-none relative"
-                    tabIndex={-1} // 포커스 가능하도록 설정 (접근성)
-                >
-                    <div className="flex items-center justify-between mb-2 pb-1">
-                        <div className="text-gray-600 font-semibold">시간대별 위협 발생 추이</div>
-                        <div className="text-gray-400 text-xs">최근 1시간 내 위협 발생 추이입니다.</div>
-                    </div>
-                    <ResponsiveContainer width="100%" height={230}>
-                        <LineChart data={logData} margin={{ left: -20, right: 25, top: 10, bottom: -10 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" /> {/* 점선 그리드 추가 */}
-                            <XAxis dataKey="time" stroke="#999" /> {/* X축 (시간) */}
-                            {/* Y축 (값), 도메인과 틱을 [0, 10]으로 고정 */}
-                            <YAxis domain={[0, 10]} ticks={[2, 4, 6, 8, 10]} stroke="#999" />
-                            <Tooltip /> {/* Tooltip 컴포넌트: 호버 시 데이터 값 표시 */}
-                            <Line type="monotone" dataKey="value" stroke="#B9CDFF" strokeWidth={2} dot={false} /> {/* 라인 그래프 */}
-                        </LineChart>
-                    </ResponsiveContainer>
-                </div>
+                <SystemChart data={logData} />
 
                 {/* 위협 유형별 분포 바 차트 및 설명 */}
                 <div className="bg-gray-50 p-4 rounded border border-gray-200 shadow-md hover:shadow-lg hover:border-gray-300 transition focus:outline-none flex flex-col" tabIndex={-1}>

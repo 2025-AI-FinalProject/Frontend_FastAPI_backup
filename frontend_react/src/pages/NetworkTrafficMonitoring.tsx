@@ -5,12 +5,11 @@ import {
     XAxis,
     YAxis,
     Tooltip,
-    ResponsiveContainer,
     CartesianGrid,
-    LineChart,
-    Line,
 } from "recharts";
-import { Link as LinkIcon, RefreshCw, Plug, PlugZap, Repeat } from "lucide-react";
+import { Link as LinkIcon, RefreshCw, Plug, PlugZap, } from "lucide-react";
+
+import TrafficChart from "../components/TrafficChart"
 
 // --- 상수 정의 ---
 
@@ -390,46 +389,12 @@ const NetworkTrafficMonitoring: React.FC = () => {
             {/* 차트 섹션: 실시간 트래픽 그래프 및 상위 목적지 포트 */}
             <div className="grid grid-cols-2 gap-4 mb-6">
                 {/* 실시간 트래픽 그래프 */}
-                <div className="bg-gray-50 p-4 rounded border border-gray-200 shadow-md hover:shadow-lg hover:border-gray-300 transition focus:outline-none flex flex-col" tabIndex={-1}>
-                    <div className="flex justify-between items-center mb-2"> {/* 제목과 토글 버튼을 나란히 정렬 */}
-                        <div className="text-gray-600 font-semibold">
-                            {/* 그래프 타입에 따라 제목 동적 변경 */}
-                            실시간 초당 트래픽 ({graphType === 'bytes' ? '바이트 (단위 자동)' : '흐름 (개/s)'})
-                        </div>
-                        {/* 그래프 전환 토글 버튼 */}
-                        <button
-                            onClick={toggleGraphType}
-                            className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded text-sm flex items-center shadow-sm"
-                        >
-                            <Repeat className="w-3 h-3 mr-1" />
-                            전환
-                        </button>
-                    </div>
-                    <ResponsiveContainer width="100%" height={240}>
-                        <LineChart
-                            data={trafficHistory}
-                            margin={{ top: 5, right: 30, left: -5, bottom: 0 }}
-                        >
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="time" />
-                            <YAxis
-                                domain={[0, 'auto']}
-                                // 그래프 타입에 따라 Y축 formatter 변경: 바이트는 단위 없이 자동 변환, 흐름은 콤마 및 0 숨김
-                                tickFormatter={graphType === 'bytes' ? (value: number) => bytesToLargestUnit(value, false) : (value: number) => value === 0 ? '' : value.toLocaleString('ko-KR')}
-                            /> 
-                            <Tooltip
-                                // 그래프 타입에 따라 툴팁 formatter 변경: 바이트는 단위 포함, 흐름은 '개/s' 포함
-                                formatter={graphType === 'bytes' ? (value: number) => bytesToLargestUnit(value, true) : (value: number) => `${value.toLocaleString('ko-KR')} 개/s`}
-                            />
-                            <Line
-                                type="monotone"
-                                dataKey={graphType === 'bytes' ? 'bytesPerSecond' : 'packetsPerSecond'} // 그래프 타입에 따라 데이터 키 변경
-                                stroke="#8884d8"
-                                activeDot={{ r: 8 }}
-                            />
-                        </LineChart>
-                    </ResponsiveContainer>
-                </div>
+                <TrafficChart
+                graphType={graphType}
+                trafficHistory={trafficHistory}
+                toggleGraphType={toggleGraphType}
+                bytesToLargestUnit={bytesToLargestUnit}
+                />
 
                 {/* 상위 목적지 포트 바 차트 - 스크롤 및 동적 높이 적용 */}
                 <div className="bg-gray-50 p-4 rounded border border-gray-200 shadow-md hover:shadow-lg transition focus:outline-none flex flex-col" tabIndex={-1}>

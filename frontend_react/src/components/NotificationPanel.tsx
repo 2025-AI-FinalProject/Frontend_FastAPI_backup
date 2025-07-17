@@ -157,7 +157,7 @@ const NotificationPanel: React.FC = () => {
                 <div className="mt-2 flex-1 flex flex-col min-h-0">
                     {/* LLM 요약본 제목과 대화 내역 삭제 버튼 */}
                     <div className="flex items-center justify-between mb-1 px-4">
-                        <h3 className="mt-2 font-semibold text-sm">LLM 요약본</h3>
+                        <h3 className="mt-2 font-semibold text-sm">A_P 챗봇</h3>
                         <button
                             onClick={handleDeleteChatHistoryRequest} // 클릭 시 삭제 확인 UI 표시 요청
                             className="text-gray-500 hover:text-red-400 p-1 rounded-full focus:outline-none focus:ring-2 focus:ring-red-300 focus:"

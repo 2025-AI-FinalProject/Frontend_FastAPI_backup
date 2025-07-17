@@ -326,9 +326,9 @@ const MyPage: React.FC = () => {
             {user.name?.charAt(0) ?? "U"} {/* 사용자 이름의 첫 글자 또는 기본 "U" */}
           </div>
           <div className="text-sm text-gray-700 text-center sm:text-left">
-            <div className="font-semibold text-gray-900">{user.name}님 과</div>
+            <div className="font-semibold text-gray-900">{user.name} 님</div>
             <div>
-              함께한 지 <span className="text-gray-600 font-medium">228일째</span> 입니다 {/* TODO: 실제 가입일로부터 경과일 계산 로직 추가 필요 */}
+              안녕하세요!
             </div>
           </div>
         </div>
