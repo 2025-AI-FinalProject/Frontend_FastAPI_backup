@@ -5,12 +5,6 @@ import { motion, AnimatePresence } from "framer-motion"; // Framer Motion을 이
 import { useAppStore } from '../context/useAppStore'; // 전역 앱 상태 (사이드바, 알림, 사용자 등)
 import { useFavoritesStore } from '../context/useFavoritesStore'; // 즐겨찾기 상태
 
-// TopNavProps 인터페이스는 현재 사용되지 않으므로 제거하거나 주석 처리할 수 있습니다.
-// interface TopNavProps {
-//     sidebarOpen: boolean;
-//     toggleSidebar: () => void;
-// }
-
 // --- TopNav 컴포넌트 정의 ---
 // 애플리케이션의 상단 내비게이션 바 컴포넌트입니다.
 // 현재 시간, 페이지 경로, 즐겨찾기, 사용자 메뉴 (마이페이지, 로그아웃), 알림 기능을 포함합니다.

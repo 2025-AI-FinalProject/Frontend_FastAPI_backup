@@ -60,7 +60,7 @@ const DownloadAuthModal: React.FC<DownloadAuthModalProps> = ({ isOpen, onClose, 
     // --- 모달 UI 렌더링 ---
     return (
         // 모달 오버레이: 배경을 어둡게 처리하고 모달을 중앙에 배치합니다.
-        <div className="fixed inset-0 bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
             {/* 모달 내용 컨테이너 */}
             <div className="bg-white rounded-lg p-8 shadow-xl max-w-md w-full relative">
                 {/* 모달 제목 */}

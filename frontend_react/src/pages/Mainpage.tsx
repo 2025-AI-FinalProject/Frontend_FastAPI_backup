@@ -1,14 +1,6 @@
 // Mainpage.tsx
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-} from "recharts";
-import {
   Plug,
   PlugZap,
   Link as LinkIcon,
@@ -310,7 +302,7 @@ const Mainpage: React.FC = () => {
     <div className="p-6">
       <div className="flex items-center justify-between mb-2"> {/* flexbox 추가 */}
         <h1 className="text-2xl font-semibold">
-          실시간 모니터링 요약을 알려드립니다🥳
+          실시간 모니터링 요약
         </h1>
         <button
           onClick={handleRefresh}

@@ -1,14 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link as LinkIcon, Plug, PlugZap, RefreshCw } from "lucide-react"; // 아이콘 임포트
-import {
-    LineChart,
-    Line,
-    XAxis,
-    YAxis,
-    ResponsiveContainer,
-    Tooltip, // Tooltip 컴포넌트 임포트: 차트 데이터 포인트에 대한 정보 표시
-    CartesianGrid, // CartesianGrid 컴포넌트 임포트: 그리드 라인 추가
-} from "recharts";
 import LogFeedModal from "../components/LogFeedModal"; // 로그 상세 정보를 보여주는 모달 컴포넌트
 import SystemChart from "../components/SystemChart"; // 차트 컴포넌트
 
@@ -105,8 +96,6 @@ const SystemNetworkMonitoring: React.FC = () => {
     // 24시간 동안 수집된 로그 수를 저장하는 상태
     const [logCount24h, setLogCount24h] = useState<number>(0); // 새 상태 추가
 
-    // 차트 시간 동기화를 위한 기준 시간 상태 (지금은 사용하지 않지만 나중에 필요할 수 있어 남겨둠)
-    const [baseTime, setBaseTime] = useState<Date>(new Date());
     // 로그 피드 모달의 열림/닫힘 상태
     const [isModalOpen, setIsModalOpen] = useState(false);
     // 시스템 연결 상태 (true: 연결 됨, false: 연결 끊김, null: 알 수 없음)

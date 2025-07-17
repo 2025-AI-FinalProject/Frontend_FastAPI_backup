@@ -8,22 +8,23 @@ import DownloadAuthModal from "../components/DownloadAuthModal";
 import { Eye, EyeOff } from "lucide-react";
 
 const API_USERDB_URL = import.meta.env.VITE_API_USERDB_URL;
+const API_DATADB_URL = import.meta.env.VITE_API_DATADB_URL;
 
 // --- Zod 스키마 정의 ---
 const signUpSchema = z
   .object({
-    emp_number: z.string().min(4).max(10),
+    emp_number: z.string().min(6, { message: "사번은 6자리 이상이어야 합니다." }).max(10), // 사번 메시지 수정
     password: z
       .string()
-      .min(8)
-      .max(20)
-      .regex(/[a-zA-Z]/)
-      .regex(/[0-9]/)
-      .regex(/[^a-zA-Z0-9]/),
+      .min(8, { message: "비밀번호는 8자리 이상이어야 합니다." })
+      .max(20, { message: "비밀번호는 20자리 이하이어야 합니다." })
+      .regex(/[a-zA-Z]/, { message: "비밀번호는 영문을 포함해야 합니다." })
+      .regex(/[0-9]/, { message: "비밀번호는 숫자를 포함해야 합니다." })
+      .regex(/[^a-zA-Z0-9]/, { message: "비밀번호는 특수문자를 포함해야 합니다." }),
     confirmPassword: z.string(),
     name: z.string().min(2).max(20),
-    email: z.string().email().min(1),
-    phone: z.string().min(1),
+    email: z.string().email({ message: "유효한 이메일 주소를 입력해주세요." }).min(1, { message: "이메일을 입력해주세요." }),
+    phone: z.string().min(1, { message: "전화번호를 입력해주세요." }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "비밀번호가 일치하지 않습니다.",
@@ -107,7 +108,7 @@ const SignUpPage: React.FC = () => {
         const downloadingToastId = toast.loading("애플리케이션 다운로드 중...");
 
         try {
-          const downloadResponse = await fetch(`${API_USERDB_URL}/api/v1/agent/download`, {
+          const downloadResponse = await fetch(`${API_DATADB_URL}/api/agent/download`, {
             method: "GET",
             headers: { Authorization: `Bearer ${access_token}` },
           });
@@ -118,7 +119,7 @@ const SignUpPage: React.FC = () => {
           const url = window.URL.createObjectURL(blob);
           const a = document.createElement("a");
           a.href = url;
-          a.download = "A.P.exe";
+          a.download = "Agent_Setup_1.0.0.exe";
           document.body.appendChild(a);
           a.click();
           a.remove();
@@ -166,43 +167,49 @@ const SignUpPage: React.FC = () => {
 
               {/* 비밀번호 */}
               <div className="relative">
-                <input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="비밀번호 (영문, 숫자, 특수문자 포함 8-20자)"
-                  {...register("password")}
-                  className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
-                    errors.password ? "border-red-500" : "border-gray-300"
-                  } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-gray-500 focus:border-gray-500 pr-10 sm:text-sm`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5 text-gray-500" /> : <Eye className="w-5 h-5 text-gray-500" />}
-                </button>
+                {/* 이 div가 input과 button을 감싸고, 이 div에 relative가 적용되어야 합니다. */}
+                <div className="relative">
+                  <input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="비밀번호 (영문, 숫자, 특수문자 포함 8-20자)"
+                    {...register("password")}
+                    className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
+                      errors.password ? "border-red-500" : "border-gray-300"
+                    } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-gray-500 focus:border-gray-500 pr-10 sm:text-sm`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5 text-gray-500" /> : <Eye className="w-5 h-5 text-gray-500" />}
+                  </button>
+                </div>
                 {errors.password && <p className="mt-1 text-red-500 text-xs">{errors.password.message}</p>}
               </div>
 
               {/* 비밀번호 확인 */}
               <div className="relative">
-                <input
-                  id="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder="비밀번호 확인"
-                  {...register("confirmPassword")}
-                  className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
-                    errors.confirmPassword ? "border-red-500" : "border-gray-300"
-                  } placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-gray-500 focus:border-gray-500 pr-10 sm:text-sm`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword((prev) => !prev)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                >
-                  {showConfirmPassword ? <EyeOff className="w-5 h-5 text-gray-500" /> : <Eye className="w-5 h-5 text-gray-500" />}
-                </button>
+                {/* 이 div가 input과 button을 감싸고, 이 div에 relative가 적용되어야 합니다. */}
+                <div className="relative">
+                  <input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="비밀번호 확인"
+                    {...register("confirmPassword")}
+                    className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
+                      errors.confirmPassword ? "border-red-500" : "border-gray-300"
+                    } placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-gray-500 focus:border-gray-500 pr-10 sm:text-sm`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((prev) => !prev)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-5 h-5 text-gray-500" /> : <Eye className="w-5 h-5 text-gray-500" />}
+                  </button>
+                </div>
                 {errors.confirmPassword && (
                   <p className="mt-1 text-red-500 text-xs">
                     {typeof errors.confirmPassword.message === "string"
@@ -285,7 +292,8 @@ const SignUpPage: React.FC = () => {
             </h2>
             <p className="text-gray-600">회원가입이 완료되면, 전용 애플리케이션을 설치하세요.</p>
             <p className="text-gray-500 text-sm">
-              아래 버튼을 클릭하여 설치 파일을 다운로드하고<br /> 화면의 안내에 따라 설치를 진행해주세요.
+              아래 버튼을 클릭하여 설치 파일을 다운로드하고
+              <br /> 화면의 안내에 따라 설치를 진행해주세요.
             </p>
             <button
               onClick={handleDownloadButtonClick}
@@ -294,15 +302,22 @@ const SignUpPage: React.FC = () => {
               애플리케이션 다운로드
             </button>
             <div className="text-gray-400 text-xs mt-4">설치 중 문제가 발생하면 관리자에게 문의해주세요.</div>
+
+
+            <div className="mt-4">
+              <Link to="/login" className="text-sm font-medium text-gray-600 hover:text-gray-500">
+                로그인 페이지로 돌아가기
+              </Link>
+            </div>
           </div>
         </div>
-      </div>
 
-      <DownloadAuthModal
-        isOpen={isDownloadModalOpen}
-        onClose={() => setIsDownloadModalOpen(false)}
-        onAuthenticate={handleAuthenticateAndDownload}
-      />
+        <DownloadAuthModal
+          isOpen={isDownloadModalOpen}
+          onClose={() => setIsDownloadModalOpen(false)}
+          onAuthenticate={handleAuthenticateAndDownload}
+        />
+      </div>
     </div>
   );
 };

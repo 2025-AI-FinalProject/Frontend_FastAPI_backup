@@ -142,9 +142,9 @@ const PasswordChange: React.FC = () => {
         }
 
         // 새 비밀번호가 백엔드 규칙을 따르는지 확인 (제출 시 최종 검증)
-        const backendStrongRegex = /^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[!@#$%^&*]).{10,}$/;
+        const backendStrongRegex = /^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[!@#$%^&*]).{8,}$/;
         if (!backendStrongRegex.test(newPw)) {
-            toast.error("새 비밀번호는 영문, 숫자, 특수문자를 포함하고 10자 이상이어야 합니다.");
+            toast.error("새 비밀번호는 영문, 숫자, 특수문자를 포함하고 8자 이상이어야 합니다.");
             return;
         }
 
@@ -264,7 +264,7 @@ const PasswordChange: React.FC = () => {
                             <ul className="list-disc list-inside space-y-1 text-xs">
                                 <li>영문 + 숫자 필수</li>
                                 <li>특수문자 1개 이상 반드시 포함</li>
-                                <li>최소 6자 이상 권장</li>
+                                <li>최소 8자 이상 권장</li>
                             </ul>
                         </div>
 
